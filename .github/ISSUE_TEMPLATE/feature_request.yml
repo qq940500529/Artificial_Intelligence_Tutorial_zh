@@ -1,0 +1,91 @@
+name: 💡 内容建议 | Feature Request
+description: 提出课程内容改进、新增知识点或结构调整建议 | Suggest improvements, new topics, or structural changes
+title: "[建议] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢你为课程改进提出建议！我们非常重视来自学习者和贡献者的反馈。
+
+        Thank you for suggesting improvements! We greatly value feedback from learners and contributors.
+
+  - type: dropdown
+    id: suggestion-type
+    attributes:
+      label: 🏷️ 建议类型 | Suggestion Type
+      description: 选择建议的类型。| Select the type of suggestion.
+      options:
+        - 📝 课程内容改进（优化已有课程的解释或示例）| Improve existing content (better explanations or examples)
+        - 📚 新增课程内容（为空的知识点目录编写课程）| New lesson content (write lessons for empty directories)
+        - 🔗 补充参考资料（推荐优质的开源学习资源）| Additional references (recommend quality open-source resources)
+        - 💻 代码示例改进（优化或新增代码示例）| Code example improvements (optimize or add code examples)
+        - 📊 图表改进（优化或新增图表）| Diagram improvements (optimize or add diagrams)
+        - 🏗️ 结构调整（调整知识点组织或学习路径）| Structural changes (adjust organization or learning paths)
+        - 🎨 排版优化（改进 Markdown 排版和可读性）| Layout optimization (improve Markdown formatting and readability)
+        - 🔧 其他 | Other
+    validations:
+      required: true
+
+  - type: input
+    id: path
+    attributes:
+      label: 📍 相关知识点路径 | Related Knowledge Point Path
+      description: |
+        如果建议涉及特定的知识点，请提供路径。| If the suggestion relates to a specific knowledge point, provide the path.
+      placeholder: "例如 / e.g.: 02_核心原理/02_深度学习/01_神经网络"
+    validations:
+      required: false
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 📝 建议描述 | Suggestion Description
+      description: |
+        请详细描述你的建议。| Please describe your suggestion in detail.
+      placeholder: |
+        请描述：
+        1. 你建议改进或新增什么内容？
+        2. 为什么你认为这个改进是有价值的？
+        3. 你希望看到什么样的效果？
+
+        Please describe:
+        1. What do you suggest to improve or add?
+        2. Why do you think this improvement is valuable?
+        3. What outcome do you expect?
+    validations:
+      required: true
+
+  - type: textarea
+    id: resources
+    attributes:
+      label: 📚 参考资源 | Reference Resources
+      description: |
+        如果有相关的参考资源（开源教材、论文、文档等），请在此列出。| If there are related reference resources, please list them here.
+      placeholder: |
+        例如 / e.g.:
+        - https://arxiv.org/abs/xxxx.xxxxx — 相关论文
+        - https://pytorch.org/docs/ — 官方文档
+    validations:
+      required: false
+
+  - type: dropdown
+    id: contribution
+    attributes:
+      label: 🤝 是否愿意贡献 | Willing to Contribute
+      description: 你是否愿意自己实现这个建议？| Are you willing to implement this suggestion yourself?
+      options:
+        - ✅ 是，我愿意提交 PR | Yes, I'm willing to submit a PR
+        - 🤔 需要帮助或指导 | I need help or guidance
+        - ❌ 否，仅提出建议 | No, just suggesting
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 💡 补充信息 | Additional Context
+      description: |
+        其他有助于理解此建议的信息。| Any other information that helps understand this suggestion.
+    validations:
+      required: false

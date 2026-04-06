@@ -1,0 +1,86 @@
+name: 🐛 内容错误报告 | Bug Report
+description: 报告课程内容中的错误（文字、公式、代码、链接等）| Report errors in course content (text, formulas, code, links, etc.)
+title: "[错误] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢你帮助我们改进课程质量！请尽量填写以下信息，以便我们快速定位和修复问题。
+
+        Thank you for helping us improve course quality! Please fill in the information below so we can locate and fix the issue quickly.
+
+  - type: input
+    id: path
+    attributes:
+      label: 📍 知识点路径 | Knowledge Point Path
+      description: |
+        错误所在的知识点路径。| Path to the knowledge point where the error is located.
+      placeholder: "例如 / e.g.: 00_高中复习/01_数学基础/01_代数与方程/01_一元二次方程"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: error-type
+    attributes:
+      label: 🏷️ 错误类型 | Error Type
+      description: 选择错误的类型。| Select the type of error.
+      options:
+        - 📝 文字错误（错别字、语法等）| Text error (typos, grammar, etc.)
+        - 📐 公式错误（数学公式不正确）| Formula error (incorrect math formulas)
+        - 💻 代码错误（代码无法运行或结果有误）| Code error (code doesn't run or produces wrong results)
+        - 🔗 链接失效（链接无法访问或指向错误）| Broken link (link is inaccessible or points to wrong target)
+        - 📊 图表错误（图表内容不正确或无法显示）| Diagram error (incorrect or broken diagrams)
+        - 📚 概念错误（专业知识理解有误）| Conceptual error (incorrect understanding of subject matter)
+        - 🎨 排版问题（Markdown 渲染异常）| Formatting issue (Markdown rendering problems)
+        - 🔧 其他 | Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 📝 错误描述 | Error Description
+      description: |
+        请详细描述你发现的错误。| Please describe the error in detail.
+      placeholder: |
+        请描述：
+        1. 具体的错误内容是什么？
+        2. 在文件中的大致位置（行号或章节标题）？
+        3. 正确的内容应该是什么？
+
+        Please describe:
+        1. What is the specific error?
+        2. Approximate location in the file (line number or section heading)?
+        3. What should the correct content be?
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: ✅ 期望的正确内容 | Expected Correct Content
+      description: |
+        如果你知道正确的内容，请在此提供。| If you know the correct content, please provide it here.
+      placeholder: "请提供你认为正确的内容 | Please provide the content you believe is correct"
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: 📸 截图 | Screenshots
+      description: |
+        如有需要，请粘贴截图以帮助说明问题。| If needed, paste screenshots to help illustrate the issue.
+      placeholder: "拖拽或粘贴截图到此处 | Drag or paste screenshots here"
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 💡 补充信息 | Additional Context
+      description: |
+        其他你认为有助于理解或修复此问题的信息。| Any other information that may help understand or fix this issue.
+    validations:
+      required: false
