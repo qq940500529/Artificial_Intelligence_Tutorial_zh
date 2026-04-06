@@ -317,7 +317,7 @@ flowchart LR
 
 本项目课程内容采用 **知识共享 署名—非商业性使用—禁止演绎 4.0 国际许可协议** 进行许可。
 
-This work is licensed under [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/) <img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg" width="20" height="20"> <img src="https://mirrors.creativecommons.org/presskit/icons/by.svg" width="20" height="20"> <img src="https://mirrors.creativecommons.org/presskit/icons/nc.svg" width="20" height="20"> <img src="https://mirrors.creativecommons.org/presskit/icons/nd.svg" width="20" height="20">
+This work is licensed under [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/) <img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg"><img src="https://mirrors.creativecommons.org/presskit/icons/by.svg"><img src="https://mirrors.creativecommons.org/presskit/icons/nc.svg"><img src="https://mirrors.creativecommons.org/presskit/icons/nd.svg">
 
 <details>
 <summary>📋 许可协议说明 / License Details</summary>
