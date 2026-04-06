@@ -29,7 +29,7 @@
 - [学习里程碑](#-学习里程碑)
 - [课程内容规范](#-课程内容规范)
 - [参与贡献](#-参与贡献)
-- [版权声明](#-版权声明)
+- [版权声明 / License](#️-版权声明--license)
 
 ---
 
@@ -311,17 +311,40 @@ flowchart LR
 
 ---
 
-## ⚖️ 版权声明
+## ⚖️ 版权声明 / License
+
+### 许可协议 / License
+
+本项目课程内容采用 **知识共享 署名—非商业性使用—禁止演绎 4.0 国际许可协议** 进行许可。
+
+This work is licensed under [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/) <img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg" width="20" height="20"> <img src="https://mirrors.creativecommons.org/presskit/icons/by.svg" width="20" height="20"> <img src="https://mirrors.creativecommons.org/presskit/icons/nc.svg" width="20" height="20"> <img src="https://mirrors.creativecommons.org/presskit/icons/nd.svg" width="20" height="20">
+
+<details>
+<summary>📋 许可协议说明 / License Details</summary>
+
+**中文**：您可以自由地共享本项目内容（以任何媒介或格式复制、发行），但须遵守以下条件：
+- **署名（BY）**：须注明原作者及来源，并提供本许可协议的链接。
+- **非商业性使用（NC）**：不得将本内容用于商业目的。
+- **禁止演绎（ND）**：不得对本内容进行修改、改编或以本内容为基础进行再创作。
+
+**English**: You are free to share (copy and redistribute) this material in any medium or format, under the following terms:
+- **Attribution (BY)**: You must give appropriate credit, provide a link to the license, and indicate the source.
+- **NonCommercial (NC)**: You may not use the material for commercial purposes.
+- **NoDerivatives (ND)**: You may not remix, transform, or build upon the material.
+
+</details>
+
+### AI 生成内容声明 / AI-Generated Content Notice
 
 > [!CAUTION]
-> 本项目中的课程内容（包括但不限于文本、代码示例、图表）均由 **AI（人工智能）辅助生成**。
+> **中文**：本项目中的课程内容（包括但不限于文本、代码示例、图表）均由 **AI（人工智能）辅助生成**。尽管我们在生成过程中力求准确与原创，但无法完全排除内容与已有作品存在相似或引用不当的情况。如果您发现本项目中的任何内容涉及**侵权**或存在版权争议，请通过以下方式联系仓库维护者，我们将在核实后第一时间进行修改或删除：
 >
-> 尽管我们在生成过程中力求准确与原创，但无法完全排除内容与已有作品存在相似或引用不当的情况。如果您发现本项目中的任何内容涉及**侵权**或存在版权争议，请通过以下方式联系仓库维护者，我们将在核实后第一时间进行修改或删除：
+> **English**: The course content in this project (including but not limited to text, code examples, and diagrams) is **AI-assisted**. While we strive for accuracy and originality, we cannot fully exclude the possibility of unintentional similarity to existing works. If you find any content that infringes upon your rights, please contact the repository maintainer via the following channels and we will promptly modify or remove it upon verification:
 >
-> - 📧 在本仓库提交 [Issue](../../issues)
-> - 💬 或通过仓库维护者的 GitHub 主页联系
+> - 📧 Submit an [Issue](../../issues) in this repository / 在本仓库提交 Issue
+> - 💬 Contact via the maintainer's GitHub profile / 通过仓库维护者的 GitHub 主页联系
 >
-> 感谢您的理解与支持。
+> 感谢您的理解与支持。/ Thank you for your understanding and support.
 
 ---
 
