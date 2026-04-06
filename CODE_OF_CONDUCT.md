@@ -51,12 +51,11 @@ This Code of Conduct applies within all project spaces (including but not limite
 
 ## 执行 | Enforcement
 
-如遇到辱骂、骚扰或其他不可接受的行为，请通过以下方式向项目维护者报告：
+如遇到辱骂、骚扰或其他不可接受的行为，请通过以下**私密方式**向项目维护者报告（请勿在公开 Issue 中举报，以保护举报者隐私）：
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the project maintainers via:
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the project maintainers **privately** (please do not use public Issues, to protect reporter privacy):
 
-- 📧 在本仓库提交 [Issue](../../issues) | Submit an [Issue](../../issues) in this repository
-- 💬 通过维护者 [GitHub 主页](https://github.com/qq940500529) 联系 | Contact via the maintainer's [GitHub profile](https://github.com/qq940500529)
+- 🔒 通过 [GitHub Security Advisories](../../security/advisories/new) 提交私密报告 | Submit a private report via [GitHub Security Advisories](../../security/advisories/new)
 
 所有投诉都将被审查和调查，并以适当的方式进行回应。项目维护者有义务对事件报告者的信息保密。
 

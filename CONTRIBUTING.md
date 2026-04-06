@@ -313,7 +313,7 @@ Each reference should note its open-access nature (e.g., "open-source textbook",
 If you have any questions, feel free to:
 
 - 📧 在本仓库提交 [Issue](../../issues) | Submit an [Issue](../../issues)
-- 💬 通过维护者的 [GitHub 主页](https://github.com/qq940500529) 联系 | Contact via the maintainer's [GitHub profile](https://github.com/qq940500529)
+- 💬 如需公开讨论，请在 Issue 中提供问题背景与相关上下文 | For public questions, please use Issues and include relevant background and context
 
 ---
 

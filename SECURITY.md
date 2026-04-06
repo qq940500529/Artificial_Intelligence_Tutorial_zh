@@ -41,13 +41,13 @@ If you discover a security issue (including but not limited to the following), p
 
 ### 报告方式 | How to Report
 
-1. **首选方式 | Preferred method**：通过 [GitHub Security Advisories](../../security/advisories/new) 提交私密安全报告。
+1. **唯一报告方式 | Only reporting method**：请通过 [GitHub Security Advisories](../../security/advisories/new) 提交私密安全报告。
 
-   Use [GitHub Security Advisories](../../security/advisories/new) to submit a private security report.
+   Please submit private security reports only through [GitHub Security Advisories](../../security/advisories/new).
 
-2. **备选方式 | Alternative**：通过维护者的 [GitHub 主页](https://github.com/qq940500529) 私信联系。
+如无法使用上述链接，请在仓库的 **Security** 选项卡中创建私密安全报告；请不要通过公开 Issue 报告安全问题。
 
-   Contact the maintainer privately via their [GitHub profile](https://github.com/qq940500529).
+If the link above is unavailable, use the repository's **Security** tab to create a private security report; please do not report security issues in a public Issue.
 
 ### 报告内容 | What to Include
 
@@ -59,7 +59,7 @@ Please include the following information in your report:
 - 📍 受影响的文件路径或 URL | Affected file paths or URLs
 - 🔄 复现步骤（如适用）| Steps to reproduce (if applicable)
 - 💥 潜在影响的评估 | Assessment of potential impact
-- 💡 建议的修复方案（如有）| Suggested fix (if any)
+- 💡 建议的修复方案（如有） | Suggested fix (if any)
 
 ---
 
