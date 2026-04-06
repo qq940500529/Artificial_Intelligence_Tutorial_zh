@@ -221,20 +221,20 @@ def solve_quadratic(a: float, b: float, c: float) -> str:
         raise ValueError("a 不能为 0，否则不是二次方程")
 
     # 计算判别式
-    delta = b**2 - 4*a*c
+    delta = b**2 - 4 * a * c
 
     print(f"方程：{a}x² + {b}x + {c} = 0")
     print(f"判别式 Δ = {b}² - 4×{a}×{c} = {delta}")
 
     if delta > 0:
-        x1 = (-b + math.sqrt(delta)) / (2*a)
-        x2 = (-b - math.sqrt(delta)) / (2*a)
+        x1 = (-b + math.sqrt(delta)) / (2 * a)
+        x2 = (-b - math.sqrt(delta)) / (2 * a)
         print(f"Δ > 0，方程有两个不同的实数解：")
         print(f"  x₁ = {x1}")
         print(f"  x₂ = {x2}")
         return f"x₁ = {x1}, x₂ = {x2}"
     elif delta == 0:
-        x = -b / (2*a)
+        x = -b / (2 * a)
         print(f"Δ = 0，方程有一个实数解（重根）：")
         print(f"  x = {x}")
         return f"x = {x}"
