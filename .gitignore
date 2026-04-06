@@ -1,0 +1,21 @@
+# OS metadata
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editor settings
+.vscode/
+.idea/
+
+# Python cache and notebooks
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# JavaScript dependencies and build output
+node_modules/
+dist/
+build/
+
+# Logs
+*.log
