@@ -25,10 +25,10 @@ fig, axes = plt.subplots(1, 2, figsize=(12, 5), facecolor='white')
 # 定义域：全体实数 ；值域：(0, 1)
 # ────────────────────────────────
 ax1 = axes[0]
-x_sig = np.linspace(-8, 8, 500)
-y_sig = 1 / (1 + np.exp(-x_sig))
+x_sigmoid = np.linspace(-8, 8, 500)
+y_sigmoid = 1 / (1 + np.exp(-x_sigmoid))
 
-ax1.plot(x_sig, y_sig, color='#E91E63', linewidth=2.5, label=r'$\sigma(x) = \frac{1}{1 + e^{-x}}$')
+ax1.plot(x_sigmoid, y_sigmoid, color='#E91E63', linewidth=2.5, label=r'$\sigma(x) = \frac{1}{1 + e^{-x}}$')
 # 标注值域边界
 ax1.axhline(y=1, color='gray', linestyle='--', alpha=0.5, label='$y = 1$ (asymptote)')
 ax1.axhline(y=0, color='gray', linestyle='--', alpha=0.5, label='$y = 0$ (asymptote)')
@@ -39,7 +39,7 @@ ax1.annotate('$(0, 0.5)$', xy=(0, 0.5), xytext=(1.5, 0.35), fontsize=11,
              arrowprops=dict(arrowstyle='->', color='gray'))
 # 用半透明色块标注值域
 ax1.axhspan(0, 1, color='#E91E63', alpha=0.05)
-ax1.fill_between(x_sig, 0, y_sig, alpha=0.1, color='#E91E63')
+ax1.fill_between(x_sigmoid, 0, y_sigmoid, alpha=0.1, color='#E91E63')
 ax1.set_xlim(-8, 8)
 ax1.set_ylim(-0.15, 1.15)
 ax1.set_xlabel(r'$x$', fontsize=13)
