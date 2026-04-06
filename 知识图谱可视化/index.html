@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人工智能知识图谱</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="ambient ambient-left"></div>
+    <div class="ambient ambient-right"></div>
+
+    <div class="search-panel glass-panel">
+        <label class="search-label" for="graph-search">搜索知识点</label>
+        <input id="graph-search" class="search-input" type="search" placeholder="输入主题、知识点或路径关键词">
+        <div id="search-results" class="search-results" hidden></div>
+    </div>
+
+    <div class="toolbar glass-panel" aria-label="图谱工具栏">
+        <button id="btn-reset-view" class="toolbar-btn" type="button" title="重置视图" aria-label="重置视图">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M3 12a9 9 0 1 0 9-9"></path>
+                <path d="M3 3v6h6"></path>
+            </svg>
+        </button>
+    </div>
+
+    <aside id="info-panel" class="info-panel glass-panel" aria-live="polite"></aside>
+
+    <div class="legend-panel glass-panel" aria-label="图例">
+        <div class="legend-title">图例</div>
+        <div class="legend-items">
+            <div class="legend-group">
+                <div class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span>00 高中复习</div>
+                <div class="legend-item"><span class="legend-dot" style="background:#10b981"></span>01 基础能力</div>
+                <div class="legend-item"><span class="legend-dot" style="background:#3b82f6"></span>02 核心原理</div>
+                <div class="legend-item"><span class="legend-dot" style="background:#8b5cf6"></span>03 工程落地</div>
+                <div class="legend-item"><span class="legend-dot" style="background:#ef4444"></span>04 持续研究</div>
+            </div>
+            <div class="legend-group">
+                <div class="legend-item"><span class="legend-line legend-line-solid"></span>阶段推进</div>
+                <div class="legend-item"><span class="legend-line legend-line-dashed"></span>桥接关系</div>
+                <div class="legend-item"><span class="legend-line legend-line-dep"></span>跨模块依赖</div>
+                <div class="legend-item"><span class="legend-line legend-line-knowledge"></span>知识衔接</div>
+                <div class="legend-item"><span class="legend-line legend-line-child"></span>父子包含</div>
+            </div>
+            <div class="legend-group">
+                <div class="legend-item"><span class="legend-circle legend-circle-lg"></span>阶段</div>
+                <div class="legend-item"><span class="legend-circle legend-circle-md"></span>主题模块</div>
+                <div class="legend-item"><span class="legend-circle legend-circle-sm"></span>主题</div>
+                <div class="legend-item"><span class="legend-circle legend-circle-xs"></span>知识点</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="node-tooltip" class="node-tooltip" hidden></div>
+
+    <svg id="knowledge-graph" role="img" aria-label="人工智能学习知识图谱"></svg>
+
+    <script src="data.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="app.js"></script>
+</body>
+</html>
