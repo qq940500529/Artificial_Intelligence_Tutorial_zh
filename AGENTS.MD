@@ -507,48 +507,50 @@ AI 在生成或修改课程内容后，应依次检查以下各项：
 
 ### 7.2 术语规范
 
-| 类别       | 要求                                                                            |
-| ---------- | ------------------------------------------------------------------------------- |
-| 中英对照   | 核心术语首次出现时标注英文：如 "梯度下降（Gradient Descent）"                   |
-| 缩写       | 首次出现写全称，括号标注缩写：如 "自然语言处理（Natural Language Processing, NLP）" |
-| 统一用词   | 选定一个译法后全篇统一：如 "损失函数" 不混用 "代价函数"                        |
+| 类别           | 要求                                                                                                                                                           |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 首次出现格式   | 使用中文全称，后面紧跟括号；括号内放置英文全称和英文缩写（如有），用逗号分隔。如果该术语也有常用的中文简称，则在括号内英文全称之前放置中文简称。格式：`中文全称（[中文简称, ]英文全称[, 英文缩写]）`。示例：`自然语言处理（Natural Language Processing, NLP）`、`人类反馈强化学习（Reinforcement Learning from Human Feedback, RLHF）`、`变换器（Transformer）` |
+| 后续行文用法   | 首次出现后，全文统一使用中文社区最习惯的称呼方式（可能是中文全称、中文简称、英文全称或英文缩写），不再混用其他形式。参照术语对照表中的"后续用法"列 |
+| 统一用词       | 选定一个译法后全篇统一：如 "损失函数" 不混用 "代价函数"                                                                                                      |
 
 ### 7.3 常用术语对照表
 
-| 中文               | 英文                              | 缩写     |
-| ------------------ | --------------------------------- | -------- |
-| 梯度下降           | Gradient Descent                  | GD       |
-| 反向传播           | Backpropagation                   | BP       |
-| 损失函数           | Loss Function                     | —        |
-| 过拟合             | Overfitting                       | —        |
-| 欠拟合             | Underfitting                      | —        |
-| 正则化             | Regularization                    | —        |
-| 卷积神经网络       | Convolutional Neural Network      | CNN      |
-| 循环神经网络       | Recurrent Neural Network          | RNN      |
-| 长短期记忆网络     | Long Short-Term Memory            | LSTM     |
-| 自注意力           | Self-Attention                    | —        |
-| 变换器             | Transformer                       | —        |
-| 大语言模型         | Large Language Model              | LLM      |
-| 检索增强生成       | Retrieval-Augmented Generation    | RAG      |
-| 低秩适配           | Low-Rank Adaptation               | LoRA     |
-| 人类反馈强化学习   | Reinforcement Learning from Human Feedback | RLHF |
-| 提示工程           | Prompt Engineering                | —        |
-| 探索性数据分析     | Exploratory Data Analysis         | EDA      |
-| 特征工程           | Feature Engineering               | —        |
-| 交叉验证           | Cross-Validation                  | CV       |
-| 偏差与方差         | Bias-Variance Tradeoff            | —        |
-| 注意力机制         | Attention Mechanism               | —        |
-| 图神经网络         | Graph Neural Network              | GNN      |
-| 生成对抗网络       | Generative Adversarial Network    | GAN      |
-| 变分自编码器       | Variational Autoencoder           | VAE      |
-| 扩散模型           | Diffusion Model                   | —        |
-| 强化学习           | Reinforcement Learning            | RL       |
-| 马尔可夫决策过程   | Markov Decision Process           | MDP      |
-| 知识蒸馏           | Knowledge Distillation            | KD       |
-| 混合专家           | Mixture of Experts                | MoE      |
-| 机器学习运维       | Machine Learning Operations       | MLOps    |
+> **首次出现**时使用"中文全称"列的名称，紧跟括号标注英文全称与缩写（如有中文简称也一并放入括号）。**后续行文**中统一使用"后续用法"列中的形式。
 
-> **注意**：如果遇到术语表中未列出的术语，采用学术界/工业界最常用的中文译法，并在括号中标注英文原文。后续应将新术语补充到此表中。
+| 中文全称           | 英文全称                                           | 缩写     | 后续用法         |
+| ------------------ | -------------------------------------------------- | -------- | ---------------- |
+| 梯度下降           | Gradient Descent                                   | GD       | 梯度下降         |
+| 反向传播           | Backpropagation                                    | BP       | 反向传播         |
+| 损失函数           | Loss Function                                      | —        | 损失函数         |
+| 过拟合             | Overfitting                                        | —        | 过拟合           |
+| 欠拟合             | Underfitting                                       | —        | 欠拟合           |
+| 正则化             | Regularization                                     | —        | 正则化           |
+| 卷积神经网络       | Convolutional Neural Network                       | CNN      | CNN              |
+| 循环神经网络       | Recurrent Neural Network                           | RNN      | RNN              |
+| 长短期记忆网络     | Long Short-Term Memory                             | LSTM     | LSTM             |
+| 自注意力           | Self-Attention                                     | —        | 自注意力         |
+| 变换器             | Transformer                                        | —        | Transformer      |
+| 大语言模型         | Large Language Model                               | LLM      | LLM              |
+| 检索增强生成       | Retrieval-Augmented Generation                     | RAG      | RAG              |
+| 低秩适配           | Low-Rank Adaptation                                | LoRA     | LoRA             |
+| 人类反馈强化学习   | Reinforcement Learning from Human Feedback         | RLHF     | RLHF             |
+| 提示工程           | Prompt Engineering                                 | —        | 提示工程         |
+| 探索性数据分析     | Exploratory Data Analysis                          | EDA      | EDA              |
+| 特征工程           | Feature Engineering                                | —        | 特征工程         |
+| 交叉验证           | Cross-Validation                                   | CV       | 交叉验证         |
+| 偏差与方差         | Bias-Variance Tradeoff                             | —        | 偏差与方差       |
+| 注意力机制         | Attention Mechanism                                | —        | 注意力机制       |
+| 图神经网络         | Graph Neural Network                               | GNN      | GNN              |
+| 生成对抗网络       | Generative Adversarial Network                     | GAN      | GAN              |
+| 变分自编码器       | Variational Autoencoder                            | VAE      | VAE              |
+| 扩散模型           | Diffusion Model                                    | —        | 扩散模型         |
+| 强化学习           | Reinforcement Learning                             | RL       | 强化学习         |
+| 马尔可夫决策过程   | Markov Decision Process                            | MDP      | MDP              |
+| 知识蒸馏           | Knowledge Distillation                             | KD       | 知识蒸馏         |
+| 混合专家           | Mixture of Experts                                 | MoE      | MoE              |
+| 机器学习运维       | Machine Learning Operations                        | MLOps    | MLOps            |
+
+> **注意**：如果遇到术语表中未列出的术语，首次出现时采用中文全称并在括号中依次标注中文简称（如有）、英文全称和缩写（如有）；后续行文统一使用中文社区最习惯的形式。新术语应补充到此表中并填写"后续用法"列。
 
 ---
 
