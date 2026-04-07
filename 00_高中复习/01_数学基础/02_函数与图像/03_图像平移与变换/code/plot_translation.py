@@ -17,7 +17,7 @@ os.makedirs(assets_dir, exist_ok=True)
 output_path = os.path.join(assets_dir, 'translation_examples.png')
 
 # ── 绘图 ──
-x = np.linspace(-4, 8, 500)
+x = np.linspace(-6, 8, 500)
 
 fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
