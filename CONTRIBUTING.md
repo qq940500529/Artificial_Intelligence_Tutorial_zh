@@ -170,7 +170,8 @@ Each lesson should contain the following sections:
 ### 数学公式要求 | Math Formula Requirements
 
 - 使用 LaTeX 语法：行内 `$...$`，独立行 `$$...$$` | Use LaTeX: inline `$...$`, display `$$...$$`
-- 行内公式前后各加一个空格 | Add a space before and after inline formulas
+- 行内公式 `$...$` 前后各加一个空格（包括中文标点之后也要加空格） | Add a space before and after inline `$...$` formulas (including after Chinese punctuation)
+- 独立行公式 `$$...$$` 前后各空一行 | Add a blank line before and after display `$$...$$` formulas
 - 每个关键公式后附「直觉解读」| Add intuitive explanations after key formulas
 
 ### 术语规范 | Terminology Standards
