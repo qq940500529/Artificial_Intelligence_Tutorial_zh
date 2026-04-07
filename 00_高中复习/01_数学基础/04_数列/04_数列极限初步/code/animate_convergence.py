@@ -13,7 +13,7 @@ import os
 import io
 
 import matplotlib
-matplotlib.use("Agg")
+matplotlib.use("Agg")  # headless backend — no display needed for GIF generation
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
