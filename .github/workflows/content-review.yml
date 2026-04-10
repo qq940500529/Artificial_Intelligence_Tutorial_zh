@@ -83,7 +83,7 @@ jobs:
             [ ! -f "$file" ] && continue
             # 查找中文字符或中文标点与 $...$ 直接相邻的情况（没有空格）
             # Find cases where Chinese chars/punctuation are directly adjacent to $...$
-            results=$(perl -ne 'print "$.:$_" if /(?:[一-龥，。、：；！？—\x{201C}\x{201D}（）]\$[^$][^$]*\$|\$[^$][^$]*\$[一-龥，。、：；！？—\x{201C}\x{201D}（）])/' "$file" 2>/dev/null || true)
+            results=$(perl -ne 'print "$.:$_" if /(?:[一-龥，。、：；！？—""（）]\$[^$][^$]*\$|\$[^$][^$]*\$[一-龥，。、：；！？—""（）])/' "$file" 2>/dev/null || true)
             if [ -n "$results" ]; then
               while IFS= read -r line; do
                 linenum=$(echo "$line" | cut -d: -f1)
