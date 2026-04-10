@@ -58,8 +58,8 @@ Click the **Fork** button at the top-right corner to create a copy under your ac
 ### 2. 克隆到本地 | Clone Locally
 
 ```bash
-git clone https://github.com/<你的用户名>/Artificial_Intelligence_Tutorial_CN.git
-cd Artificial_Intelligence_Tutorial_CN
+git clone https://github.com/<你的用户名>/Artificial_Intelligence_Tutorial_zh.git
+cd Artificial_Intelligence_Tutorial_zh
 ```
 
 ### 3. 创建分支 | Create a Branch

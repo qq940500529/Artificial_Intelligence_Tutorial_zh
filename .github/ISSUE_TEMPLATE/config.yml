@@ -1,8 +1,8 @@
 blank_issues_enabled: true
 contact_links:
   - name: 📖 课程内容规范 | Content Standards
-    url: https://github.com/qq940500529/Artificial_Intelligence_Tutorial_CN/blob/main/CONTRIBUTING.md
+    url: https://github.com/qq940500529/Artificial_Intelligence_Tutorial_zh/blob/main/CONTRIBUTING.md
     about: 在提交 Issue 之前，请先阅读贡献指南。| Please read the contributing guide before submitting an Issue.
   - name: 💬 讨论区 | Discussions
-    url: https://github.com/qq940500529/Artificial_Intelligence_Tutorial_CN/discussions
+    url: https://github.com/qq940500529/Artificial_Intelligence_Tutorial_zh/discussions
     about: 有问题或想法？欢迎在讨论区交流。| Have questions or ideas? Feel free to discuss.
