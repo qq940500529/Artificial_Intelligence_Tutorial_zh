@@ -9,6 +9,8 @@ on:
     types: [created]
 
 permissions:
+  contents: read
+  issues: read
   discussions: write
 
 jobs:

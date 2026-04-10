@@ -9,6 +9,7 @@ on:
     types: [closed, reopened, labeled]
 
 permissions:
+  contents: read
   issues: write
 
 jobs:
