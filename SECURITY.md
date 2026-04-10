@@ -2,7 +2,7 @@
 
 感谢你帮助我们维护 **人工智能中文教程** 项目的安全。本文档说明了如何报告安全漏洞以及我们的响应流程。
 
-Thank you for helping keep the **Artificial Intelligence Tutorial (CN)** project safe. This document describes how to report security vulnerabilities and our response process.
+Thank you for helping keep the **Artificial Intelligence Tutorial (zh)** project safe. This document describes how to report security vulnerabilities and our response process.
 
 ---
 
