@@ -46,7 +46,7 @@ jobs:
                 '',
                 `🎉 Congratulations @${prAuthor}, your Pull Request has been merged!`,
                 '',
-                'Thank you for your contribution to the **Artificial Intelligence Tutorial CN**! Your improvements will help more learners.',
+                'Thank you for your contribution to the **Artificial Intelligence Tutorial (CN)**! Your improvements will help more learners.',
                 '',
                 'You can continue participating in the project by:',
                 `- 📋 Checking [open Issues](${repoUrl}/issues) for more contribution opportunities`,
