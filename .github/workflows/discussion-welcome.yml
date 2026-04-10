@@ -21,14 +21,16 @@ jobs:
           script: |
             const discussionAuthor = context.payload.discussion.user.login;
 
+            const repoUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}`;
+
             const lines = [
               `👋 你好 @${discussionAuthor}，感谢你发起了这个讨论！`,
               '',
               '我们鼓励社区成员之间的交流与分享。以下是一些可能有用的资源：',
               '',
-              '- 📖 [贡献指南](../blob/main/CONTRIBUTING.md) — 了解如何参与项目贡献',
-              '- 📋 [课程内容规范](../blob/main/AGENTS.MD) — 了解课程体系与规范',
-              '- 🐛 [提交 Issue](../issues/new/choose) — 报告错误或提出建议',
+              `- 📖 [贡献指南](${repoUrl}/blob/main/CONTRIBUTING.md) — 了解如何参与项目贡献`,
+              `- 📋 [课程内容规范](${repoUrl}/blob/main/AGENTS.MD) — 了解课程体系与规范`,
+              `- 🐛 [提交 Issue](${repoUrl}/issues/new/choose) — 报告错误或提出建议`,
               '',
               '如果你的问题涉及课程内容的错误或改进建议，建议使用 Issue 模板提交，以便我们更好地跟踪和处理。',
               '',
@@ -38,9 +40,9 @@ jobs:
               '',
               'We encourage communication and sharing among community members. Here are some helpful resources:',
               '',
-              '- 📖 [Contributing Guide](../blob/main/CONTRIBUTING.md) — Learn how to contribute to the project',
-              '- 📋 [Content Standards](../blob/main/AGENTS.MD) — Learn about the course structure and standards',
-              '- 🐛 [Submit an Issue](../issues/new/choose) — Report errors or suggest improvements',
+              `- 📖 [Contributing Guide](${repoUrl}/blob/main/CONTRIBUTING.md) — Learn how to contribute to the project`,
+              `- 📋 [Content Standards](${repoUrl}/blob/main/AGENTS.MD) — Learn about the course structure and standards`,
+              `- 🐛 [Submit an Issue](${repoUrl}/issues/new/choose) — Report errors or suggest improvements`,
               '',
               'If your question involves content errors or improvement suggestions, we recommend using the Issue templates for better tracking.'
             ];

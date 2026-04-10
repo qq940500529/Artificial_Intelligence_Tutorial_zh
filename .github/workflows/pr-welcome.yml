@@ -21,6 +21,8 @@ jobs:
           script: |
             const prAuthor = context.payload.pull_request.user.login;
 
+            const repoUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}`;
+
             const lines = [
               `👋 你好 @${prAuthor}，感谢你提交了这个 Pull Request！`,
               '',
@@ -48,7 +50,7 @@ jobs:
               '- [ ] 提交信息格式：`[阶段编号/主题模块] 动作：知识点名称`',
               '- [ ] 未修改 `知识图谱可视化/` 目录',
               '',
-              '> 📖 详细规范请参阅 [贡献指南](../blob/main/CONTRIBUTING.md) 和 [AGENTS.MD](../blob/main/AGENTS.MD)。',
+              `> 📖 详细规范请参阅 [贡献指南](${repoUrl}/blob/main/CONTRIBUTING.md) 和 [AGENTS.MD](${repoUrl}/blob/main/AGENTS.MD)。`,
               '',
               '---',
               '',
@@ -56,7 +58,7 @@ jobs:
               '',
               'Maintainers will review your contribution as soon as possible. While waiting for review, please confirm the checklist above.',
               '',
-              '> 📖 For detailed standards, see the [Contributing Guide](../blob/main/CONTRIBUTING.md) and [AGENTS.MD](../blob/main/AGENTS.MD).'
+              `> 📖 For detailed standards, see the [Contributing Guide](${repoUrl}/blob/main/CONTRIBUTING.md) and [AGENTS.MD](${repoUrl}/blob/main/AGENTS.MD).`
             ];
 
             await github.rest.issues.createComment({

@@ -90,8 +90,6 @@ jobs:
                 ERROR_COUNT=$((ERROR_COUNT + 1))
               done <<< "$results"
             fi
-            # 查找行内公式后直接紧跟中文字符的情况
-            results2=$(grep -n '[^$]\$[^$\n ，。、：；！？]' "$file" 2>/dev/null | grep -v '^\s*\$\$' | grep -v 'assets/' | grep -v 'http' | grep -v '```' || true)
           done <<< "${{ steps.changed.outputs.files }}"
           echo "::endgroup::"
 
@@ -326,8 +324,9 @@ jobs:
             }
 
             body += `---\n\n`;
-            body += `> 📖 审查规则基于 [AGENTS.MD](../blob/main/AGENTS.MD) 中的质量标准。\n`;
-            body += `> 📖 Review rules are based on quality standards in [AGENTS.MD](../blob/main/AGENTS.MD).\n`;
+            const repoUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}`;
+            body += `> 📖 审查规则基于 [AGENTS.MD](${repoUrl}/blob/main/AGENTS.MD) 中的质量标准。\n`;
+            body += `> 📖 Review rules are based on quality standards in [AGENTS.MD](${repoUrl}/blob/main/AGENTS.MD).\n`;
             body += `>\n`;
             body += `> 如有误报，请忽略相关条目并在 PR 中说明原因。\n`;
             body += `> If there are false positives, please ignore the relevant items and explain in the PR.`;

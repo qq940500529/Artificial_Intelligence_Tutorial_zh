@@ -24,6 +24,7 @@ jobs:
             const isBugReport = issueTitle.startsWith('[错误]');
             const isFeatureRequest = issueTitle.startsWith('[建议]');
 
+            const repoUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}`;
             const lines = [];
 
             if (isBugReport) {
@@ -32,8 +33,8 @@ jobs:
                 '',
                 '我们会尽快审查你报告的问题。在此期间，你可以参考以下资源：',
                 '',
-                '- 📖 [贡献指南](../blob/main/CONTRIBUTING.md) — 了解项目规范',
-                '- 📋 [课程内容规范](../blob/main/AGENTS.MD) — 查看课程质量标准',
+                `- 📖 [贡献指南](${repoUrl}/blob/main/CONTRIBUTING.md) — 了解项目规范`,
+                `- 📋 [课程内容规范](${repoUrl}/blob/main/AGENTS.MD) — 查看课程质量标准`,
                 '',
                 '如果你有兴趣自己修复这个问题，欢迎直接提交 Pull Request！',
                 '',
@@ -43,8 +44,8 @@ jobs:
                 '',
                 'We will review the reported issue as soon as possible. In the meantime, you may find these resources helpful:',
                 '',
-                '- 📖 [Contributing Guide](../blob/main/CONTRIBUTING.md) — Learn about project conventions',
-                '- 📋 [Content Standards](../blob/main/AGENTS.MD) — Review course quality standards',
+                `- 📖 [Contributing Guide](${repoUrl}/blob/main/CONTRIBUTING.md) — Learn about project conventions`,
+                `- 📋 [Content Standards](${repoUrl}/blob/main/AGENTS.MD) — Review course quality standards`,
                 '',
                 "If you're interested in fixing this issue yourself, feel free to submit a Pull Request!"
               );
@@ -54,8 +55,8 @@ jobs:
                 '',
                 '我们非常重视来自学习者和贡献者的反馈。维护者会尽快审查你的建议。',
                 '',
-                '- 📖 [贡献指南](../blob/main/CONTRIBUTING.md) — 了解如何参与贡献',
-                '- 📋 [课程内容规范](../blob/main/AGENTS.MD) — 查看课程体系结构和规范',
+                `- 📖 [贡献指南](${repoUrl}/blob/main/CONTRIBUTING.md) — 了解如何参与贡献`,
+                `- 📋 [课程内容规范](${repoUrl}/blob/main/AGENTS.MD) — 查看课程体系结构和规范`,
                 '',
                 '如果你愿意自己实现这个建议，欢迎提交 Pull Request！',
                 '',
@@ -65,8 +66,8 @@ jobs:
                 '',
                 'We greatly value feedback from learners and contributors. Maintainers will review your suggestion as soon as possible.',
                 '',
-                '- 📖 [Contributing Guide](../blob/main/CONTRIBUTING.md) — Learn how to contribute',
-                '- 📋 [Content Standards](../blob/main/AGENTS.MD) — Review the course structure and standards',
+                `- 📖 [Contributing Guide](${repoUrl}/blob/main/CONTRIBUTING.md) — Learn how to contribute`,
+                `- 📋 [Content Standards](${repoUrl}/blob/main/AGENTS.MD) — Review the course structure and standards`,
                 '',
                 "If you'd like to implement this suggestion yourself, feel free to submit a Pull Request!"
               );
@@ -76,9 +77,9 @@ jobs:
                 '',
                 '维护者会尽快查看你的 Issue。以下是一些可能有用的资源：',
                 '',
-                '- 📖 [贡献指南](../blob/main/CONTRIBUTING.md) — 了解项目规范',
-                '- 📋 [课程内容规范](../blob/main/AGENTS.MD) — 查看课程质量标准',
-                '- 💬 [讨论区](../discussions) — 进行开放性讨论',
+                `- 📖 [贡献指南](${repoUrl}/blob/main/CONTRIBUTING.md) — 了解项目规范`,
+                `- 📋 [课程内容规范](${repoUrl}/blob/main/AGENTS.MD) — 查看课程质量标准`,
+                `- 💬 [讨论区](${repoUrl}/discussions) — 进行开放性讨论`,
                 '',
                 '---',
                 '',
@@ -86,9 +87,9 @@ jobs:
                 '',
                 'Maintainers will review your Issue as soon as possible. Here are some resources that might be helpful:',
                 '',
-                '- 📖 [Contributing Guide](../blob/main/CONTRIBUTING.md) — Learn about project conventions',
-                '- 📋 [Content Standards](../blob/main/AGENTS.MD) — Review course quality standards',
-                '- 💬 [Discussions](../discussions) — For open discussions'
+                `- 📖 [Contributing Guide](${repoUrl}/blob/main/CONTRIBUTING.md) — Learn about project conventions`,
+                `- 📋 [Content Standards](${repoUrl}/blob/main/AGENTS.MD) — Review course quality standards`,
+                `- 💬 [Discussions](${repoUrl}/discussions) — For open discussions`
               );
             }
 
