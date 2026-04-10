@@ -1,0 +1,100 @@
+# 自动回复 Issue | Auto-reply to Issues
+# 当新 Issue 被创建时，自动发送中英双语欢迎消息并添加标签
+# When a new Issue is created, automatically send a bilingual welcome message and add labels
+
+name: Issue Welcome Reply
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+
+jobs:
+  welcome:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Welcome new issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueTitle = context.payload.issue.title;
+            const issueAuthor = context.payload.issue.user.login;
+            const isBugReport = issueTitle.startsWith('[错误]');
+            const isFeatureRequest = issueTitle.startsWith('[建议]');
+
+            const lines = [];
+
+            if (isBugReport) {
+              lines.push(
+                `👋 你好 @${issueAuthor}，感谢你提交了这个错误报告！`,
+                '',
+                '我们会尽快审查你报告的问题。在此期间，你可以参考以下资源：',
+                '',
+                '- 📖 [贡献指南](../blob/main/CONTRIBUTING.md) — 了解项目规范',
+                '- 📋 [课程内容规范](../blob/main/AGENTS.MD) — 查看课程质量标准',
+                '',
+                '如果你有兴趣自己修复这个问题，欢迎直接提交 Pull Request！',
+                '',
+                '---',
+                '',
+                `👋 Hi @${issueAuthor}, thank you for submitting this bug report!`,
+                '',
+                'We will review the reported issue as soon as possible. In the meantime, you may find these resources helpful:',
+                '',
+                '- 📖 [Contributing Guide](../blob/main/CONTRIBUTING.md) — Learn about project conventions',
+                '- 📋 [Content Standards](../blob/main/AGENTS.MD) — Review course quality standards',
+                '',
+                "If you're interested in fixing this issue yourself, feel free to submit a Pull Request!"
+              );
+            } else if (isFeatureRequest) {
+              lines.push(
+                `👋 你好 @${issueAuthor}，感谢你提出了这个改进建议！`,
+                '',
+                '我们非常重视来自学习者和贡献者的反馈。维护者会尽快审查你的建议。',
+                '',
+                '- 📖 [贡献指南](../blob/main/CONTRIBUTING.md) — 了解如何参与贡献',
+                '- 📋 [课程内容规范](../blob/main/AGENTS.MD) — 查看课程体系结构和规范',
+                '',
+                '如果你愿意自己实现这个建议，欢迎提交 Pull Request！',
+                '',
+                '---',
+                '',
+                `👋 Hi @${issueAuthor}, thank you for your improvement suggestion!`,
+                '',
+                'We greatly value feedback from learners and contributors. Maintainers will review your suggestion as soon as possible.',
+                '',
+                '- 📖 [Contributing Guide](../blob/main/CONTRIBUTING.md) — Learn how to contribute',
+                '- 📋 [Content Standards](../blob/main/AGENTS.MD) — Review the course structure and standards',
+                '',
+                "If you'd like to implement this suggestion yourself, feel free to submit a Pull Request!"
+              );
+            } else {
+              lines.push(
+                `👋 你好 @${issueAuthor}，感谢你创建了这个 Issue！`,
+                '',
+                '维护者会尽快查看你的 Issue。以下是一些可能有用的资源：',
+                '',
+                '- 📖 [贡献指南](../blob/main/CONTRIBUTING.md) — 了解项目规范',
+                '- 📋 [课程内容规范](../blob/main/AGENTS.MD) — 查看课程质量标准',
+                '- 💬 [讨论区](../discussions) — 进行开放性讨论',
+                '',
+                '---',
+                '',
+                `👋 Hi @${issueAuthor}, thank you for creating this Issue!`,
+                '',
+                'Maintainers will review your Issue as soon as possible. Here are some resources that might be helpful:',
+                '',
+                '- 📖 [Contributing Guide](../blob/main/CONTRIBUTING.md) — Learn about project conventions',
+                '- 📋 [Content Standards](../blob/main/AGENTS.MD) — Review course quality standards',
+                '- 💬 [Discussions](../discussions) — For open discussions'
+              );
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: lines.join('\n')
+            });

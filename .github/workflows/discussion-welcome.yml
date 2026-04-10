@@ -1,0 +1,59 @@
+# 自动回复 Discussion | Auto-reply to Discussions
+# 当新 Discussion 被创建时，自动发送中英双语欢迎消息
+# When a new Discussion is created, automatically send a bilingual welcome message
+
+name: Discussion Welcome Reply
+
+on:
+  discussion:
+    types: [created]
+
+permissions:
+  discussions: write
+
+jobs:
+  welcome:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Welcome new discussion
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const discussionAuthor = context.payload.discussion.user.login;
+
+            const lines = [
+              `👋 你好 @${discussionAuthor}，感谢你发起了这个讨论！`,
+              '',
+              '我们鼓励社区成员之间的交流与分享。以下是一些可能有用的资源：',
+              '',
+              '- 📖 [贡献指南](../blob/main/CONTRIBUTING.md) — 了解如何参与项目贡献',
+              '- 📋 [课程内容规范](../blob/main/AGENTS.MD) — 了解课程体系与规范',
+              '- 🐛 [提交 Issue](../issues/new/choose) — 报告错误或提出建议',
+              '',
+              '如果你的问题涉及课程内容的错误或改进建议，建议使用 Issue 模板提交，以便我们更好地跟踪和处理。',
+              '',
+              '---',
+              '',
+              `👋 Hi @${discussionAuthor}, thank you for starting this discussion!`,
+              '',
+              'We encourage communication and sharing among community members. Here are some helpful resources:',
+              '',
+              '- 📖 [Contributing Guide](../blob/main/CONTRIBUTING.md) — Learn how to contribute to the project',
+              '- 📋 [Content Standards](../blob/main/AGENTS.MD) — Learn about the course structure and standards',
+              '- 🐛 [Submit an Issue](../issues/new/choose) — Report errors or suggest improvements',
+              '',
+              'If your question involves content errors or improvement suggestions, we recommend using the Issue templates for better tracking.'
+            ];
+
+            const mutation = `mutation($discussionId: ID!, $body: String!) {
+              addDiscussionComment(input: {discussionId: $discussionId, body: $body}) {
+                comment {
+                  id
+                }
+              }
+            }`;
+
+            await github.graphql(mutation, {
+              discussionId: context.payload.discussion.node_id,
+              body: lines.join('\n')
+            });

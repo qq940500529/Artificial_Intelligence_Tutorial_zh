@@ -1,0 +1,360 @@
+# 课程内容审查工作流 | Course Content Review Workflow
+# 基于 AGENTS.MD 中的质量标准，自动检查 PR 中的课程内容常见问题
+# Based on quality standards in AGENTS.MD, automatically check common issues in PR course content
+
+name: Content Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - '00_高中复习/**'
+      - '01_基础能力/**'
+      - '02_核心原理/**'
+      - '03_工程落地/**'
+      - '04_持续研究/**'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files
+        id: changed
+        run: |
+          # 获取 PR 中变更的文件列表
+          # Get the list of changed files in the PR
+          FILES=$(git diff --name-only --diff-filter=ACMR origin/${{ github.base_ref }}...HEAD -- \
+            '00_高中复习/' '01_基础能力/' '02_核心原理/' '03_工程落地/' '04_持续研究/' \
+            | grep '\.md$' || true)
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          echo "$FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          # 获取所有变更文件（包括非 md）
+          ALL_FILES=$(git diff --name-only --diff-filter=ACMR origin/${{ github.base_ref }}...HEAD || true)
+          echo "all_files<<EOF" >> $GITHUB_OUTPUT
+          echo "$ALL_FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Run content checks
+        id: checks
+        if: steps.changed.outputs.files != ''
+        run: |
+          ISSUES=""
+          WARNINGS=""
+          ERROR_COUNT=0
+          WARNING_COUNT=0
+
+          # === 检查 1：课程主文件命名检查 ===
+          # === Check 1: Course main file naming check ===
+          # AGENTS.MD 4.2: 不得在知识点目录中使用 README.md 作为课程主文件名
+          echo "::group::Check 1: Course file naming"
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            dir=$(dirname "$file")
+            filename=$(basename "$file")
+            # 检查是否在知识点目录（第4级）中使用了 README.md
+            # Check if README.md is used in knowledge point directories (4th level)
+            depth=$(echo "$dir" | tr '/' '\n' | wc -l)
+            if [ "$depth" -ge 4 ] && [ "$filename" = "README.md" ]; then
+              dirname_base=$(basename "$dir")
+              ISSUES="${ISSUES}\n- ❌ **文件命名错误 | Naming Error**: \`${file}\`\n  知识点目录中不应使用 \`README.md\` 作为课程主文件，应使用 \`${dirname_base}.md\`\n  Knowledge point directories should not use \`README.md\`; use \`${dirname_base}.md\` instead\n"
+              ERROR_COUNT=$((ERROR_COUNT + 1))
+            fi
+          done <<< "${{ steps.changed.outputs.files }}"
+          echo "::endgroup::"
+
+          # === 检查 2：行内公式前后空格检查 ===
+          # === Check 2: Inline formula spacing check ===
+          # AGENTS.MD 5.3.4: 行内公式 $...$ 的前后必须各加一个空格
+          echo "::group::Check 2: Inline formula spacing"
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            [ ! -f "$file" ] && continue
+            # 查找中文字符或中文标点直接紧跟 $ 的情况（没有空格）
+            # Find cases where Chinese chars/punctuation directly precede/follow $
+            results=$(grep -n '[，。、：；！？—""（）]\$[^$]' "$file" 2>/dev/null || true)
+            if [ -n "$results" ]; then
+              while IFS= read -r line; do
+                linenum=$(echo "$line" | cut -d: -f1)
+                ISSUES="${ISSUES}\n- ❌ **公式空格缺失 | Missing Formula Spacing**: \`${file}:${linenum}\`\n  中文标点后紧跟行内公式 \`\$...\$\` 缺少空格\n  Missing space after Chinese punctuation before inline formula \`\$...\$\`\n"
+                ERROR_COUNT=$((ERROR_COUNT + 1))
+              done <<< "$results"
+            fi
+            # 查找行内公式后直接紧跟中文字符的情况
+            results2=$(grep -n '[^$]\$[^$\n ，。、：；！？]' "$file" 2>/dev/null | grep -v '^\s*\$\$' | grep -v 'assets/' | grep -v 'http' | grep -v '```' || true)
+          done <<< "${{ steps.changed.outputs.files }}"
+          echo "::endgroup::"
+
+          # === 检查 3：独立行公式前后空行检查 ===
+          # === Check 3: Display formula blank line check ===
+          # AGENTS.MD 5.3.4: 独立行公式 $$...$$ 的前后必须各空一行
+          echo "::group::Check 3: Display formula blank lines"
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            [ ! -f "$file" ] && continue
+            # 查找 $$ 行，检查其前一行或后一行是否非空
+            line_count=$(wc -l < "$file")
+            linenum=0
+            prev_line=""
+            prev_empty=true
+            while IFS= read -r line || [ -n "$line" ]; do
+              linenum=$((linenum + 1))
+              # 检查是否为独立行公式的开始 $$
+              if echo "$line" | grep -qE '^\$\$'; then
+                if [ "$prev_empty" = false ]; then
+                  WARNINGS="${WARNINGS}\n- ⚠️ **公式前缺少空行 | Missing Blank Line Before Formula**: \`${file}:${linenum}\`\n  独立行公式 \`\$\$...\$\$\` 前应有空行\n  Display formula \`\$\$...\$\$\` should have a blank line before it\n"
+                  WARNING_COUNT=$((WARNING_COUNT + 1))
+                fi
+              fi
+              # 检查前一行是独立行公式的结尾 $$，而当前行非空
+              if echo "$prev_line" | grep -qE '\$\$$' && [ -n "$(echo "$line" | tr -d '[:space:]')" ] && ! echo "$line" | grep -qE '^\$\$'; then
+                if ! echo "$prev_line" | grep -qE '^\$\$.*\$\$$'; then
+                  # 多行公式结尾
+                  WARNINGS="${WARNINGS}\n- ⚠️ **公式后缺少空行 | Missing Blank Line After Formula**: \`${file}:$((linenum - 1))\`\n  独立行公式 \`\$\$...\$\$\` 后应有空行\n  Display formula \`\$\$...\$\$\` should have a blank line after it\n"
+                  WARNING_COUNT=$((WARNING_COUNT + 1))
+                fi
+              fi
+              prev_line="$line"
+              if [ -z "$(echo "$line" | tr -d '[:space:]')" ]; then
+                prev_empty=true
+              else
+                prev_empty=false
+              fi
+            done < "$file"
+          done <<< "${{ steps.changed.outputs.files }}"
+          echo "::endgroup::"
+
+          # === 检查 4：连续公式紧贴检查 ===
+          # === Check 4: Adjacent formulas check ===
+          # AGENTS.MD 5.3.4: 严禁多个 $$...$$ 写在同一行或紧邻排列
+          echo "::group::Check 4: Adjacent formulas"
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            [ ! -f "$file" ] && continue
+            # 查找 $$$$ 模式（两个 $$ 紧邻）
+            results=$(grep -n '\$\$\$\$' "$file" 2>/dev/null || true)
+            if [ -n "$results" ]; then
+              while IFS= read -r line; do
+                linenum=$(echo "$line" | cut -d: -f1)
+                ISSUES="${ISSUES}\n- ❌ **连续公式紧贴 | Adjacent Formulas**: \`${file}:${linenum}\`\n  多个 \`\$\$...\$\$\` 公式紧邻排列，会导致渲染错误。每个公式必须独占一行且用空行分隔\n  Multiple \`\$\$...\$\$\` formulas are adjacent, causing rendering errors. Each formula must be on its own line separated by blank lines\n"
+                ERROR_COUNT=$((ERROR_COUNT + 1))
+              done <<< "$results"
+            fi
+          done <<< "${{ steps.changed.outputs.files }}"
+          echo "::endgroup::"
+
+          # === 检查 5：绝对路径检查 ===
+          # === Check 5: Absolute path check ===
+          # AGENTS.MD 4.4: 不得在课程内容中硬编码绝对路径
+          echo "::group::Check 5: Absolute paths"
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            [ ! -f "$file" ] && continue
+            # 查找硬编码的绝对路径（排除 URL 和代码块中的路径说明）
+            results=$(grep -n '\](/\|](/home/\|](/Users/\|](/C:\\' "$file" 2>/dev/null || true)
+            if [ -n "$results" ]; then
+              while IFS= read -r line; do
+                linenum=$(echo "$line" | cut -d: -f1)
+                ISSUES="${ISSUES}\n- ❌ **绝对路径 | Absolute Path**: \`${file}:${linenum}\`\n  课程内容中不应使用绝对路径，请使用相对路径\n  Absolute paths should not be used in course content; use relative paths instead\n"
+                ERROR_COUNT=$((ERROR_COUNT + 1))
+              done <<< "$results"
+            fi
+          done <<< "${{ steps.changed.outputs.files }}"
+          echo "::endgroup::"
+
+          # === 检查 6：知识图谱可视化目录保护 ===
+          # === Check 6: Visualization directory protection ===
+          # AGENTS.MD 4.4: 不得修改 知识图谱可视化/ 目录下的文件
+          echo "::group::Check 6: Visualization directory protection"
+          if echo "${{ steps.changed.outputs.all_files }}" | grep -q '知识图谱可视化/'; then
+            ISSUES="${ISSUES}\n- ❌ **禁止修改 | Protected Directory**: \`知识图谱可视化/\` 目录\n  该目录独立维护，不得在 PR 中修改\n  This directory is maintained independently and should not be modified in PRs\n"
+            ERROR_COUNT=$((ERROR_COUNT + 1))
+          fi
+          echo "::endgroup::"
+
+          # === 检查 7：<details> 内多行公式检查 ===
+          # === Check 7: Multi-line formulas in <details> check ===
+          # AGENTS.MD 5.3.6 / 8.4: <details> 内的显示公式必须使用单行格式
+          echo "::group::Check 7: Multi-line formulas in details"
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            [ ! -f "$file" ] && continue
+            # 查找 <details> 区域内的多行 $$ 公式
+            in_details=false
+            linenum=0
+            while IFS= read -r line || [ -n "$line" ]; do
+              linenum=$((linenum + 1))
+              if echo "$line" | grep -qi '<details'; then
+                in_details=true
+              fi
+              if echo "$line" | grep -qi '</details'; then
+                in_details=false
+              fi
+              if [ "$in_details" = true ]; then
+                # 检查是否有只包含 $$ 的行（多行公式的开始或结束标记）
+                trimmed=$(echo "$line" | tr -d '[:space:]')
+                if [ "$trimmed" = '$$' ]; then
+                  ISSUES="${ISSUES}\n- ❌ **折叠区域多行公式 | Multi-line Formula in Details**: \`${file}:${linenum}\`\n  \`<details>\` 内的显示公式必须使用单行格式 \`\$\$公式\$\$\`，\`\\frac\` 改为 \`\\dfrac\`\n  Display formulas inside \`<details>\` must use single-line format \`\$\$formula\$\$\`; replace \`\\frac\` with \`\\dfrac\`\n"
+                  ERROR_COUNT=$((ERROR_COUNT + 1))
+                fi
+              fi
+            done < "$file"
+          done <<< "${{ steps.changed.outputs.files }}"
+          echo "::endgroup::"
+
+          # === 检查 8：课程模板必需章节检查 ===
+          # === Check 8: Required sections check ===
+          # AGENTS.MD 6.1: 必须包含全部模板必需章节
+          echo "::group::Check 8: Required sections"
+          REQUIRED_SECTIONS=("前置知识" "学习目标" "正文讲解" "动手实践" "练习题" "下一步学习" "参考资料")
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            [ ! -f "$file" ] && continue
+            filename=$(basename "$file")
+            dirpath=$(dirname "$file")
+            dirname_base=$(basename "$dirpath")
+            # 只检查知识点课程主文件（第4级目录中与目录同名的 .md 文件）
+            depth=$(echo "$dirpath" | tr '/' '\n' | wc -l)
+            if [ "$depth" -ge 4 ] && [ "$filename" = "${dirname_base}.md" ]; then
+              for section in "${REQUIRED_SECTIONS[@]}"; do
+                if ! grep -q "## ${section}" "$file" 2>/dev/null; then
+                  WARNINGS="${WARNINGS}\n- ⚠️ **缺少必需章节 | Missing Required Section**: \`${file}\`\n  缺少「${section}」章节\n  Missing \"${section}\" section\n"
+                  WARNING_COUNT=$((WARNING_COUNT + 1))
+                fi
+              done
+            fi
+          done <<< "${{ steps.changed.outputs.files }}"
+          echo "::endgroup::"
+
+          # === 检查 9：.gitkeep 误删检查 ===
+          # === Check 9: .gitkeep deletion check ===
+          # AGENTS.MD 4.4: 不得删除尚未被课程内容替代的 .gitkeep 文件
+          echo "::group::Check 9: .gitkeep deletion"
+          DELETED_GITKEEPS=$(git diff --name-only --diff-filter=D origin/${{ github.base_ref }}...HEAD -- '*/.gitkeep' 2>/dev/null || true)
+          if [ -n "$DELETED_GITKEEPS" ]; then
+            while IFS= read -r gkfile; do
+              [ -z "$gkfile" ] && continue
+              gk_dir=$(dirname "$gkfile")
+              # 检查该目录中是否有课程内容（新增或已有的 .md 文件）
+              has_content=false
+              if ls "${gk_dir}"/*.md 2>/dev/null | head -1 > /dev/null 2>&1; then
+                has_content=true
+              fi
+              if echo "${{ steps.changed.outputs.all_files }}" | grep -q "^${gk_dir}/.*\.md$"; then
+                has_content=true
+              fi
+              if [ "$has_content" = false ]; then
+                ISSUES="${ISSUES}\n- ❌ **.gitkeep 误删 | .gitkeep Deleted Without Replacement**: \`${gkfile}\`\n  该目录中尚无课程内容替代 \`.gitkeep\` 文件\n  No course content exists in this directory to replace the \`.gitkeep\` file\n"
+                ERROR_COUNT=$((ERROR_COUNT + 1))
+              fi
+            done <<< "$DELETED_GITKEEPS"
+          fi
+          echo "::endgroup::"
+
+          # === 检查 10：\frac 在 <details> 内的使用检查 ===
+          # === Check 10: \frac usage in <details> check ===
+          echo "::group::Check 10: \\frac in details"
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            [ ! -f "$file" ] && continue
+            in_details=false
+            linenum=0
+            while IFS= read -r line || [ -n "$line" ]; do
+              linenum=$((linenum + 1))
+              if echo "$line" | grep -qi '<details'; then
+                in_details=true
+              fi
+              if echo "$line" | grep -qi '</details'; then
+                in_details=false
+              fi
+              if [ "$in_details" = true ]; then
+                if echo "$line" | grep -q '\\frac{' 2>/dev/null && ! echo "$line" | grep -q '\\dfrac{' 2>/dev/null; then
+                  WARNINGS="${WARNINGS}\n- ⚠️ **折叠区域使用 \\\\frac | \\\\frac in Details**: \`${file}:${linenum}\`\n  \`<details>\` 内应使用 \`\\\\dfrac\` 代替 \`\\\\frac\`\n  Use \`\\\\dfrac\` instead of \`\\\\frac\` inside \`<details>\`\n"
+                  WARNING_COUNT=$((WARNING_COUNT + 1))
+                fi
+              fi
+            done < "$file"
+          done <<< "${{ steps.changed.outputs.files }}"
+          echo "::endgroup::"
+
+          # 保存结果
+          echo "error_count=$ERROR_COUNT" >> $GITHUB_OUTPUT
+          echo "warning_count=$WARNING_COUNT" >> $GITHUB_OUTPUT
+
+          {
+            echo "issues<<EOF"
+            echo -e "$ISSUES"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
+          {
+            echo "warnings<<EOF"
+            echo -e "$WARNINGS"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
+          echo "Total errors: $ERROR_COUNT, warnings: $WARNING_COUNT"
+
+      - name: Post review comment
+        if: steps.checks.outputs.error_count != '0' || steps.checks.outputs.warning_count != '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const errors = `${{ steps.checks.outputs.issues }}`.trim();
+            const warnings = `${{ steps.checks.outputs.warnings }}`.trim();
+            const errorCount = parseInt('${{ steps.checks.outputs.error_count }}') || 0;
+            const warningCount = parseInt('${{ steps.checks.outputs.warning_count }}') || 0;
+
+            let body = `## 📋 课程内容自动审查报告 | Content Review Report\n\n`;
+
+            if (errorCount > 0) {
+              body += `### ❌ 错误 | Errors (${errorCount})\n\n以下问题需要修复后才能合并：\nThe following issues must be fixed before merging:\n\n${errors}\n\n`;
+            }
+
+            if (warningCount > 0) {
+              body += `### ⚠️ 警告 | Warnings (${warningCount})\n\n以下问题建议修复：\nThe following issues are recommended to fix:\n\n${warnings}\n\n`;
+            }
+
+            body += `---\n\n`;
+            body += `> 📖 审查规则基于 [AGENTS.MD](../blob/main/AGENTS.MD) 中的质量标准。\n`;
+            body += `> 📖 Review rules are based on quality standards in [AGENTS.MD](../blob/main/AGENTS.MD).\n`;
+            body += `>\n`;
+            body += `> 如有误报，请忽略相关条目并在 PR 中说明原因。\n`;
+            body += `> If there are false positives, please ignore the relevant items and explain in the PR.`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: body
+            });
+
+      - name: Post success comment
+        if: steps.changed.outputs.files != '' && steps.checks.outputs.error_count == '0' && steps.checks.outputs.warning_count == '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = `## ✅ 课程内容自动审查通过 | Content Review Passed\n\n所有自动检查项均已通过，未发现常见格式问题。\nAll automated checks passed. No common formatting issues found.\n\n> 📖 自动审查仅覆盖常见格式问题，内容质量仍需人工审查。\n> 📖 Automated review only covers common formatting issues; content quality still requires manual review.`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: body
+            });
+
+      - name: Fail on errors
+        if: steps.checks.outputs.error_count != '0'
+        run: |
+          echo "::error::Found ${{ steps.checks.outputs.error_count }} error(s) in content review"
+          exit 1

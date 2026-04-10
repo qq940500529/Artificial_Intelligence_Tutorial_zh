@@ -1,0 +1,67 @@
+# 自动回复 Pull Request | Auto-reply to Pull Requests
+# 当新 PR 被创建时，自动发送中英双语欢迎消息和审查提醒
+# When a new PR is created, automatically send a bilingual welcome message and review reminders
+
+name: PR Welcome Reply
+
+on:
+  pull_request_target:
+    types: [opened]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  welcome:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Welcome new PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prAuthor = context.payload.pull_request.user.login;
+
+            const lines = [
+              `👋 你好 @${prAuthor}，感谢你提交了这个 Pull Request！`,
+              '',
+              '维护者会尽快审查你的贡献。在等待审查期间，请确认以下事项：',
+              '',
+              '### 📋 自检清单 | Self-check Checklist',
+              '',
+              '#### 结构与命名 | Structure & Naming',
+              '- [ ] 课程主文件使用与目录同名的 `.md` 文件（非 `README.md`）',
+              '- [ ] 目录和文件命名符合规范（中文名 + 数字前缀）',
+              '- [ ] 已删除对应的 `.gitkeep` 占位文件',
+              '',
+              '#### 内容质量 | Content Quality',
+              '- [ ] 包含所有必需章节（前置知识、学习目标、正文、实践、练习、参考资料）',
+              '- [ ] 采用叙事引导式行文',
+              '- [ ] 术语首次出现标注中英文',
+              '',
+              '#### 排版规范 | Formatting',
+              '- [ ] 行内公式 `$...$` 前后有空格（包括中文标点之后）',
+              '- [ ] 独立行公式 `$$...$$` 前后有空行',
+              '- [ ] `<details>` 内公式使用单行 `$$公式$$` 格式',
+              '- [ ] 链接使用相对路径',
+              '',
+              '#### 提交规范 | Commit Conventions',
+              '- [ ] 提交信息格式：`[阶段编号/主题模块] 动作：知识点名称`',
+              '- [ ] 未修改 `知识图谱可视化/` 目录',
+              '',
+              '> 📖 详细规范请参阅 [贡献指南](../blob/main/CONTRIBUTING.md) 和 [AGENTS.MD](../blob/main/AGENTS.MD)。',
+              '',
+              '---',
+              '',
+              `👋 Hi @${prAuthor}, thank you for submitting this Pull Request!`,
+              '',
+              'Maintainers will review your contribution as soon as possible. While waiting for review, please confirm the checklist above.',
+              '',
+              '> 📖 For detailed standards, see the [Contributing Guide](../blob/main/CONTRIBUTING.md) and [AGENTS.MD](../blob/main/AGENTS.MD).'
+            ];
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: lines.join('\n')
+            });
