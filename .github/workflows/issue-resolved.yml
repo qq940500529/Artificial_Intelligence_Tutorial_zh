@@ -1,0 +1,257 @@
+# Issue 处理结果自动回复 | Auto-reply on Issue Resolution
+# 当 Issue 被关闭、重新打开或添加特定标签时，自动发送中英双语通知
+# When an Issue is closed, reopened, or labeled, automatically send bilingual notifications
+
+name: Issue Resolved Reply
+
+on:
+  issues:
+    types: [closed, reopened, labeled]
+
+permissions:
+  issues: write
+
+jobs:
+  reply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reply on issue resolution
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const action = context.payload.action;
+            const issue = context.payload.issue;
+            const issueAuthor = issue.user.login;
+            const actor = context.payload.sender.login;
+            const repoUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}`;
+            const lines = [];
+
+            // === Issue 被关闭 | Issue closed ===
+            if (action === 'closed') {
+              const stateReason = issue.state_reason || 'completed';
+
+              if (stateReason === 'completed') {
+                // 关闭为"已完成" | Closed as completed
+                lines.push(
+                  `✅ 你好 @${issueAuthor}，这个 Issue 已被 @${actor} 标记为已完成并关闭。`,
+                  '',
+                  '感谢你的反馈，它帮助我们改进了课程质量！',
+                  '',
+                  '如果你发现问题仍然存在或有后续问题，欢迎：',
+                  '- 重新打开此 Issue',
+                  `- [创建新的 Issue](${repoUrl}/issues/new/choose)`,
+                  '',
+                  '---',
+                  '',
+                  `✅ Hi @${issueAuthor}, this Issue has been marked as completed and closed by @${actor}.`,
+                  '',
+                  'Thank you for your feedback — it helped us improve the course quality!',
+                  '',
+                  'If you find the issue still persists or have follow-up questions, feel free to:',
+                  '- Reopen this Issue',
+                  `- [Create a new Issue](${repoUrl}/issues/new/choose)`
+                );
+              } else if (stateReason === 'not_planned') {
+                // 关闭为"不予处理" | Closed as not planned
+                lines.push(
+                  `📋 你好 @${issueAuthor}，这个 Issue 已被 @${actor} 关闭（不予处理）。`,
+                  '',
+                  '可能的原因包括：',
+                  '- 该问题不在当前课程体系的范围内',
+                  '- 当前暂无计划实施此建议',
+                  '- 该问题的优先级较低，暂时搁置',
+                  '',
+                  '这不意味着你的反馈没有价值！如果你认为此问题很重要，欢迎：',
+                  `- 在 [讨论区](${repoUrl}/discussions) 中进一步讨论`,
+                  '- 在此 Issue 下补充更多信息和理由',
+                  '',
+                  '---',
+                  '',
+                  `📋 Hi @${issueAuthor}, this Issue has been closed as not planned by @${actor}.`,
+                  '',
+                  'Possible reasons include:',
+                  '- The issue is outside the scope of the current curriculum',
+                  '- There are no current plans to implement this suggestion',
+                  '- The issue is lower priority and is being deferred',
+                  '',
+                  "This doesn't mean your feedback isn't valuable! If you believe this is important, feel free to:",
+                  `- Discuss further in [Discussions](${repoUrl}/discussions)`,
+                  '- Provide additional context and reasoning in this Issue'
+                );
+              }
+            }
+
+            // === Issue 被重新打开 | Issue reopened ===
+            if (action === 'reopened') {
+              lines.push(
+                `🔄 你好 @${issueAuthor}，这个 Issue 已被 @${actor} 重新打开。`,
+                '',
+                '我们会重新关注此问题。如果有新的信息需要补充，请在下方留言。',
+                '',
+                '---',
+                '',
+                `🔄 Hi @${issueAuthor}, this Issue has been reopened by @${actor}.`,
+                '',
+                'We will revisit this issue. If you have new information to add, please leave a comment below.'
+              );
+            }
+
+            // === Issue 被添加标签 | Issue labeled ===
+            if (action === 'labeled') {
+              const labelName = context.payload.label.name.toLowerCase();
+
+              if (labelName === 'duplicate') {
+                lines.push(
+                  `🔁 你好 @${issueAuthor}，这个 Issue 已被标记为 **重复（duplicate）**。`,
+                  '',
+                  '这意味着已有一个类似的 Issue 在跟踪此问题。请查看相关的 Issue 以获取最新进展。',
+                  '',
+                  `你可以在 [Issue 列表](${repoUrl}/issues) 中搜索相关的问题。`,
+                  '',
+                  '如果你认为此 Issue 与已有问题不同，请在下方留言说明差异，我们会重新评估。',
+                  '',
+                  '---',
+                  '',
+                  `🔁 Hi @${issueAuthor}, this Issue has been marked as **duplicate**.`,
+                  '',
+                  'This means a similar Issue is already tracking this problem. Please check the related Issue for the latest updates.',
+                  '',
+                  `You can search for related issues in the [Issue list](${repoUrl}/issues).`,
+                  '',
+                  'If you believe this Issue is different from the existing one, please leave a comment explaining the difference and we will re-evaluate.'
+                );
+              } else if (labelName === 'invalid') {
+                lines.push(
+                  `⚠️ 你好 @${issueAuthor}，这个 Issue 已被标记为 **无效（invalid）**。`,
+                  '',
+                  '可能的原因包括：',
+                  '- Issue 描述不够清晰，无法理解具体问题',
+                  '- 报告的问题无法复现',
+                  '- 该问题不属于本项目的范畴',
+                  '',
+                  '如果你认为这是一个误判，请：',
+                  '- 在下方补充更多详细信息',
+                  `- 使用正确的 [Issue 模板](${repoUrl}/issues/new/choose) 重新提交`,
+                  '',
+                  '---',
+                  '',
+                  `⚠️ Hi @${issueAuthor}, this Issue has been marked as **invalid**.`,
+                  '',
+                  'Possible reasons include:',
+                  '- The Issue description is unclear',
+                  '- The reported problem cannot be reproduced',
+                  '- The issue is not within the scope of this project',
+                  '',
+                  'If you believe this is a misjudgment, please:',
+                  '- Provide more detailed information below',
+                  `- Re-submit using the correct [Issue template](${repoUrl}/issues/new/choose)`
+                );
+              } else if (labelName === 'needs-more-info' || labelName === 'question') {
+                lines.push(
+                  `❓ 你好 @${issueAuthor}，你的 Issue 需要补充更多信息。`,
+                  '',
+                  '为了帮助我们更好地理解和解决你的问题，请补充以下内容：',
+                  '- 📍 具体的知识点路径或文件位置',
+                  '- 📝 详细的问题描述或复现步骤',
+                  '- 📸 相关截图（如有）',
+                  '',
+                  '请直接在此 Issue 下方回复补充信息，我们会在收到后尽快处理。',
+                  '',
+                  '---',
+                  '',
+                  `❓ Hi @${issueAuthor}, your Issue needs more information.`,
+                  '',
+                  'To help us better understand and resolve your issue, please provide:',
+                  '- 📍 Specific knowledge point path or file location',
+                  '- 📝 Detailed description or steps to reproduce',
+                  '- 📸 Relevant screenshots (if any)',
+                  '',
+                  'Please reply below with the additional information and we will address it as soon as possible.'
+                );
+              } else if (labelName === 'wontfix') {
+                lines.push(
+                  `🚫 你好 @${issueAuthor}，这个 Issue 已被标记为 **不予修复（wontfix）**。`,
+                  '',
+                  '这通常意味着：',
+                  '- 该问题属于预期行为',
+                  '- 修复此问题的成本超出收益',
+                  '- 该问题将在后续版本中以其他方式解决',
+                  '',
+                  `如有疑问，欢迎在 [讨论区](${repoUrl}/discussions) 中进一步交流。`,
+                  '',
+                  '---',
+                  '',
+                  `🚫 Hi @${issueAuthor}, this Issue has been marked as **wontfix**.`,
+                  '',
+                  'This typically means:',
+                  '- The behavior is by design',
+                  '- The cost of fixing outweighs the benefit',
+                  '- The issue will be addressed differently in a future update',
+                  '',
+                  `If you have questions, feel free to discuss further in [Discussions](${repoUrl}/discussions).`
+                );
+              } else if (labelName === 'good first issue') {
+                lines.push(
+                  `🌟 这个 Issue 已被标记为 **适合新手（good first issue）**！`,
+                  '',
+                  '如果你是第一次参与开源贡献，这个 Issue 非常适合你！',
+                  '',
+                  '开始之前，建议你：',
+                  `1. 阅读 [贡献指南](${repoUrl}/blob/main/CONTRIBUTING.md)`,
+                  `2. 了解 [课程内容规范](${repoUrl}/blob/main/AGENTS.MD)`,
+                  '3. Fork 仓库并创建新分支',
+                  '4. 完成修改后提交 Pull Request',
+                  '',
+                  '如果遇到任何问题，欢迎在此 Issue 下留言询问！',
+                  '',
+                  '---',
+                  '',
+                  `🌟 This Issue has been marked as a **good first issue**!`,
+                  '',
+                  "If you're new to open source contributions, this Issue is a great place to start!",
+                  '',
+                  'Before you begin:',
+                  `1. Read the [Contributing Guide](${repoUrl}/blob/main/CONTRIBUTING.md)`,
+                  `2. Review the [Content Standards](${repoUrl}/blob/main/AGENTS.MD)`,
+                  '3. Fork the repository and create a new branch',
+                  '4. Submit a Pull Request once done',
+                  '',
+                  'If you run into any problems, feel free to ask in this Issue!'
+                );
+              } else if (labelName === 'help wanted') {
+                lines.push(
+                  `🙏 这个 Issue 正在寻求社区帮助！`,
+                  '',
+                  '如果你对此问题感兴趣，欢迎认领并提交 Pull Request。',
+                  '',
+                  `- 📖 [贡献指南](${repoUrl}/blob/main/CONTRIBUTING.md)`,
+                  `- 📋 [课程内容规范](${repoUrl}/blob/main/AGENTS.MD)`,
+                  '',
+                  '认领前请在此 Issue 下留言，以避免重复工作。',
+                  '',
+                  '---',
+                  '',
+                  `🙏 This Issue is looking for community help!`,
+                  '',
+                  "If you're interested, feel free to claim it and submit a Pull Request.",
+                  '',
+                  `- 📖 [Contributing Guide](${repoUrl}/blob/main/CONTRIBUTING.md)`,
+                  `- 📋 [Content Standards](${repoUrl}/blob/main/AGENTS.MD)`,
+                  '',
+                  'Please leave a comment before starting work to avoid duplication.'
+                );
+              } else {
+                // 不为其他标签发送回复
+                return;
+              }
+            }
+
+            // 只有有内容时才发送评论
+            if (lines.length === 0) return;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body: lines.join('\n')
+            });

@@ -1,0 +1,180 @@
+# PR 处理结果自动回复 | Auto-reply on PR Resolution
+# 当 PR 被合并、关闭或审查时，自动发送中英双语通知
+# When a PR is merged, closed, or reviewed, automatically send bilingual notifications
+
+name: PR Resolved Reply
+
+on:
+  pull_request_target:
+    types: [closed]
+  pull_request_review:
+    types: [submitted]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  # === PR 合并或关闭 | PR merged or closed ===
+  on-close:
+    if: github.event_name == 'pull_request_target'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reply on PR close
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const prAuthor = pr.user.login;
+            const actor = context.payload.sender.login;
+            const merged = pr.merged;
+            const repoUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}`;
+            const lines = [];
+
+            if (merged) {
+              // === PR 被合并 | PR merged ===
+              lines.push(
+                `🎉 恭喜 @${prAuthor}，你的 Pull Request 已被合并！`,
+                '',
+                '感谢你为 **人工智能学习工作区** 做出的贡献！你的改进将帮助更多学习者。',
+                '',
+                '你可以继续通过以下方式参与项目：',
+                `- 📋 查看 [未解决的 Issues](${repoUrl}/issues) 寻找更多贡献机会`,
+                `- 💬 在 [讨论区](${repoUrl}/discussions) 与社区交流`,
+                `- ⭐ 给项目一个 Star 以支持我们`,
+                '',
+                '---',
+                '',
+                `🎉 Congratulations @${prAuthor}, your Pull Request has been merged!`,
+                '',
+                'Thank you for your contribution to the **AI Tutorial**! Your improvements will help more learners.',
+                '',
+                'You can continue participating in the project by:',
+                `- 📋 Checking [open Issues](${repoUrl}/issues) for more contribution opportunities`,
+                `- 💬 Engaging with the community in [Discussions](${repoUrl}/discussions)`,
+                `- ⭐ Giving the project a Star to show your support`
+              );
+            } else {
+              // === PR 被关闭未合并 | PR closed without merging ===
+              lines.push(
+                `📝 你好 @${prAuthor}，这个 Pull Request 已被关闭（未合并）。`,
+                '',
+                '可能的原因包括：',
+                '- 变更内容需要进一步修改或调整',
+                '- 与其他正在进行的工作存在冲突',
+                '- 贡献方向与当前课程规划不一致',
+                '- 已有其他 PR 解决了相同的问题',
+                '',
+                '**这不意味着你的努力没有价值！** 感谢你愿意为项目做出贡献。',
+                '',
+                '你可以：',
+                '- 根据审查反馈修改后重新提交新的 PR',
+                `- 在相关 [Issue](${repoUrl}/issues) 中继续讨论`,
+                `- 在 [讨论区](${repoUrl}/discussions) 中讨论你的方案`,
+                '',
+                '---',
+                '',
+                `📝 Hi @${prAuthor}, this Pull Request has been closed without merging.`,
+                '',
+                'Possible reasons include:',
+                '- The changes need further modifications or adjustments',
+                '- There are conflicts with other ongoing work',
+                '- The contribution direction is not aligned with the current curriculum plan',
+                '- Another PR has already addressed the same issue',
+                '',
+                "**This doesn't mean your effort isn't valued!** Thank you for being willing to contribute.",
+                '',
+                'You can:',
+                '- Revise based on review feedback and submit a new PR',
+                `- Continue discussing in the related [Issue](${repoUrl}/issues)`,
+                `- Discuss your approach in [Discussions](${repoUrl}/discussions)`
+              );
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              body: lines.join('\n')
+            });
+
+  # === PR 审查结果 | PR review result ===
+  on-review:
+    if: github.event_name == 'pull_request_review'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reply on PR review
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const review = context.payload.review;
+            const pr = context.payload.pull_request;
+            const prAuthor = pr.user.login;
+            const reviewer = review.user.login;
+            const state = review.state;
+            const repoUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}`;
+            const lines = [];
+
+            // 不回复作者自己的审查
+            if (reviewer === prAuthor) return;
+
+            if (state === 'changes_requested') {
+              // === 审查：请求修改 | Review: changes requested ===
+              lines.push(
+                `📝 你好 @${prAuthor}，审查者 @${reviewer} 请求对你的 PR 进行修改。`,
+                '',
+                '请查看审查意见并进行相应调整。修改完成后：',
+                '1. 将新的提交推送到此 PR 的分支',
+                '2. 在此 PR 中回复说明修改内容',
+                '3. 请求重新审查',
+                '',
+                '常见修改要点提醒：',
+                `- 📖 [课程内容规范](${repoUrl}/blob/main/AGENTS.MD) — 确保内容符合质量标准`,
+                '- 行内公式 `$...$` 前后需有空格',
+                '- `<details>` 内公式使用单行 `$$公式$$` 格式',
+                '- 课程主文件使用与目录同名的 `.md` 文件',
+                '',
+                '如有任何疑问，欢迎在 PR 中直接讨论。',
+                '',
+                '---',
+                '',
+                `📝 Hi @${prAuthor}, reviewer @${reviewer} has requested changes to your PR.`,
+                '',
+                'Please review the feedback and make the necessary adjustments. Once done:',
+                '1. Push new commits to this PR branch',
+                '2. Reply in this PR describing your changes',
+                '3. Request a re-review',
+                '',
+                'Common formatting reminders:',
+                `- 📖 [Content Standards](${repoUrl}/blob/main/AGENTS.MD) — Ensure content meets quality standards`,
+                '- Inline formulas `$...$` need spaces before and after',
+                '- Formulas in `<details>` use single-line `$$formula$$` format',
+                '- Main course file uses directory-name `.md` file',
+                '',
+                'If you have any questions, feel free to discuss directly in the PR.'
+              );
+            } else if (state === 'approved') {
+              // === 审查：通过 | Review: approved ===
+              lines.push(
+                `✅ 恭喜 @${prAuthor}，你的 PR 已通过 @${reviewer} 的审查！`,
+                '',
+                '你的贡献质量很高，感谢你的认真付出！维护者将在确认后尽快合并此 PR。',
+                '',
+                '---',
+                '',
+                `✅ Congratulations @${prAuthor}, your PR has been approved by @${reviewer}!`,
+                '',
+                'Your contribution is of high quality — thank you for your dedication! Maintainers will merge this PR as soon as possible.'
+              );
+            } else {
+              // 对于 'commented' 类型不发送自动回复，避免重复通知
+              return;
+            }
+
+            if (lines.length === 0) return;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              body: lines.join('\n')
+            });
