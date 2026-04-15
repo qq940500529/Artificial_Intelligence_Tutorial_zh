@@ -11,6 +11,7 @@ on:
       - '02_核心原理/**'
       - '03_工程落地/**'
       - '04_持续研究/**'
+      - 'AGENTS.MD'
   workflow_dispatch:
 
 permissions:
