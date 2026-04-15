@@ -352,6 +352,11 @@ class WikiSyncer:
         to absolute paths (unlike the sidebar renderer).  Using absolute
         paths ensures links work regardless of the current page URL
         (with or without trailing slash).
+
+        Args:
+            text: The visible link text.
+            wiki_name: Target wiki page name (without .md extension).
+            anchor: Optional fragment identifier (e.g. '#section').
         """
         return (
             f'[{text}](/{self.repo_slug}/wiki/{wiki_name}{anchor})'
@@ -805,6 +810,12 @@ def _img_replace(match, point_name: str, repo_slug: str) -> str:
 
     GitHub Wiki does not serve raw files via relative paths under /wiki/.
     Images must use absolute URLs pointing to raw.githubusercontent.com.
+
+    Args:
+        match: Regex match object with group(1) = '![alt](' prefix
+               and group(2) = the original image URL.
+        point_name: Knowledge point directory name (used as namespace).
+        repo_slug: GitHub repository slug (owner/repo).
     """
     full = match.group(0)
     prefix = match.group(1)  # '!['...']('
