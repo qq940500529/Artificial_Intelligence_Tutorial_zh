@@ -642,7 +642,7 @@ print("测试通过！")
 
 ## 下一步学习
 
-- 📖 下一个知识点：[functools模块](../03_functools模块/) — 学习缓存、偏函数和函数组合工具
+- 📖 下一个知识点：[functools模块](../03_functools模块/03_functools模块.md) — 学习缓存、偏函数和函数组合工具
 - 🔗 相关知识点：[迭代器协议](../01_迭代器协议/01_迭代器协议.md) — 回顾迭代器的底层机制
 - 📚 拓展阅读：[collections模块](../../03_容器类型深入/01_collections模块/01_collections模块.md) — 掌握 deque 等高效容器，与 itertools 搭配使用
 
