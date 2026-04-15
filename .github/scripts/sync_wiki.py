@@ -337,12 +337,25 @@ class WikiSyncer:
         """
         parts = src_rel_path.parts
         crumbs = ' / '.join(parts[:-1])
-        home_link = '[🏠 首页](Home)'
+        home_link = f'[🏠 首页](/{self.repo_slug}/wiki/Home)'
         if crumbs:
             header = f'> {home_link} · {crumbs}\n\n---\n\n'
         else:
             header = f'> {home_link}\n\n---\n\n'
         return header + content
+
+    def _wiki_link(self, text: str, wiki_name: str,
+                   anchor: str = '') -> str:
+        """Generate an absolute wiki link to avoid relative URL issues.
+
+        GitHub Wiki's content renderer does NOT convert relative links
+        to absolute paths (unlike the sidebar renderer).  Using absolute
+        paths ensures links work regardless of the current page URL
+        (with or without trailing slash).
+        """
+        return (
+            f'[{text}](/{self.repo_slug}/wiki/{wiki_name}{anchor})'
+        )
 
     # ---------------------------------------------------------------
     # 4. link transformation
@@ -367,6 +380,14 @@ class WikiSyncer:
             if re.match(r'^(https?://|#|mailto:|data:)', url):
                 return full
 
+            # Helper to build a wiki link (absolute or Home anchor)
+            def _mklink(txt, dest, anc=''):
+                if dest.startswith('Home#'):
+                    return (
+                        f'[{txt}](/{self.repo_slug}/wiki/{dest})'
+                    )
+                return self._wiki_link(txt, dest, anc)
+
             # Handle .md links (both file.md and dir/file.md)
             if url.endswith('.md') or '.md#' in url:
                 # Split off any anchor
@@ -389,20 +410,20 @@ class WikiSyncer:
                     if target_stem != 'README':
                         for wn in self._path_to_wiki.values():
                             if wn == target_stem:
-                                return f'[{text}]({wn}{anchor})'
-                    return f'[{text}]({target_stem}{anchor})'
+                                return _mklink(text, wn, anchor)
+                    return _mklink(text, target_stem, anchor)
 
                 # Look up wiki page name by exact repo-relative path
                 wiki_name = self._path_to_wiki.get(repo_rel)
                 if wiki_name:
-                    return f'[{text}]({wiki_name}{anchor})'
+                    return _mklink(text, wiki_name, anchor)
 
                 # Fallback: match by filename stem (all knowledge
                 # point and topic names are unique across the repo)
                 if target_stem != 'README':
                     for wn in self._path_to_wiki.values():
                         if wn == target_stem:
-                            return f'[{text}]({wn}{anchor})'
+                            return _mklink(text, wn, anchor)
 
                 # Try: directory link ending with /README.md
                 # -> topic page
@@ -411,7 +432,7 @@ class WikiSyncer:
                     topic_dir = Path(repo_rel).parent.name
                     for wn in self._path_to_wiki.values():
                         if wn == topic_dir:
-                            return f'[{text}]({topic_dir}{anchor})'
+                            return _mklink(text, topic_dir, anchor)
 
                 return full
 
@@ -430,17 +451,17 @@ class WikiSyncer:
                     # Path went above repo root; use fallback
                     for wn in self._path_to_wiki.values():
                         if wn == dir_name:
-                            return f'[{text}]({wn})'
+                            return _mklink(text, wn)
                     # Check _dir_to_wiki by directory name
                     for dk, dv in self._dir_to_wiki.items():
                         if Path(dk).name == dir_name:
-                            return f'[{text}]({dv})'
-                    return f'[{text}]({dir_name})'
+                            return _mklink(text, dv)
+                    return _mklink(text, dir_name)
 
                 # Check _dir_to_wiki for stage/module/topic/point
                 wiki_dest = self._dir_to_wiki.get(dir_rel)
                 if wiki_dest:
-                    return f'[{text}]({wiki_dest})'
+                    return _mklink(text, wiki_dest)
 
                 if resolved.is_dir():
                     # Check if this dir has a main course file
@@ -452,29 +473,29 @@ class WikiSyncer:
                         wiki_name = self._path_to_wiki.get(
                             rel, dir_name
                         )
-                        return f'[{text}]({wiki_name})'
+                        return _mklink(text, wiki_name)
                     if readme_md.is_file():
                         rel = str(readme_md.relative_to(self.main))
                         wiki_name = self._path_to_wiki.get(
                             rel, dir_name
                         )
-                        return f'[{text}]({wiki_name})'
+                        return _mklink(text, wiki_name)
 
                 # Fallback: match directory name against wiki pages
                 # (handles broken relative paths in source files)
                 for wn in self._path_to_wiki.values():
                     if wn == dir_name:
-                        return f'[{text}]({wn})'
+                        return _mklink(text, wn)
 
                 # Check _dir_to_wiki by directory name (partial match)
                 for dk, dv in self._dir_to_wiki.items():
                     if Path(dk).name == dir_name:
-                        return f'[{text}]({dv})'
+                        return _mklink(text, dv)
 
                 # Final fallback: use the last path component as
                 # wiki page name.  When the target course is created
                 # and synced later, the link will automatically work.
-                return f'[{text}]({dir_name})'
+                return _mklink(text, dir_name)
 
             return full
 
@@ -497,7 +518,7 @@ class WikiSyncer:
         # Match image syntax ![alt](url)
         content = re.sub(
             r'(!\[[^\]]*\]\()([^)]+)',
-            lambda m: _img_replace(m, point_name),
+            lambda m: _img_replace(m, point_name, self.repo_slug),
             content,
         )
 
@@ -536,15 +557,18 @@ class WikiSyncer:
                     ]
 
                     for pt_name in topic_data['points']:
-                        lines.append(f'- [{pt_name}]({pt_name})')
+                        pt_link = self._wiki_link(pt_name, pt_name)
+                        lines.append(f'- {pt_link}')
 
                     lines.append('')
 
                     # add nav header
                     nav_content = '\n'.join(lines)
                     crumbs = rel_dir.replace('/', ' / ')
+                    home = f'/{self.repo_slug}/wiki/Home'
                     header = (
-                        f'> [🏠 首页](Home) · {crumbs}\n\n---\n\n'
+                        f'> [🏠 首页]({home}) · {crumbs}'
+                        f'\n\n---\n\n'
                     )
                     nav_content = header + nav_content
 
@@ -617,10 +641,14 @@ class WikiSyncer:
 
                 for topic_name, topic_data in mod_data.items():
                     if topic_data['readme']:
+                        topic_url = (
+                            f'/{self.repo_slug}/wiki/'
+                            f'{topic_data["readme"]}'
+                        )
                         lines.append(
                             f'<details><summary>'
                             f'<strong>📂 <a href="'
-                            f'{topic_data["readme"]}'
+                            f'{topic_url}'
                             f'">{topic_name}</a></strong> '
                             f'({len(topic_data["points"])} 个知识点)'
                             f'</summary>'
@@ -635,7 +663,8 @@ class WikiSyncer:
                     lines.append('')
 
                     for pt_name in topic_data['points']:
-                        lines.append(f'- [{pt_name}]({pt_name})')
+                        pt_link = self._wiki_link(pt_name, pt_name)
+                        lines.append(f'- {pt_link}')
 
                     lines.extend(['', '</details>', ''])
 
@@ -673,7 +702,7 @@ class WikiSyncer:
         print('📑 Generating _Sidebar.md …')
 
         lines = [
-            '**[🏠 首页](Home)**',
+            f'**[🏠 首页](/{self.repo_slug}/wiki/Home)**',
             '',
             '---',
             '',
@@ -708,10 +737,14 @@ class WikiSyncer:
 
                     for topic_name, topic_data in mod_data.items():
                         if topic_data['readme']:
+                            topic_url = (
+                                f'/{self.repo_slug}/wiki/'
+                                f'{topic_data["readme"]}'
+                            )
                             lines.append(
                                 f'&emsp;&emsp;'
                                 f'[{topic_name}]'
-                                f'({topic_data["readme"]})'
+                                f'({topic_url})'
                             )
                         else:
                             lines.append(
@@ -767,8 +800,12 @@ def _anchor(text: str) -> str:
     return anchor
 
 
-def _img_replace(match, point_name: str) -> str:
-    """Replace image asset paths with _assets/ prefix."""
+def _img_replace(match, point_name: str, repo_slug: str) -> str:
+    """Replace image asset paths with absolute raw.githubusercontent URLs.
+
+    GitHub Wiki does not serve raw files via relative paths under /wiki/.
+    Images must use absolute URLs pointing to raw.githubusercontent.com.
+    """
     full = match.group(0)
     prefix = match.group(1)  # '!['...']('
     url = match.group(2)
@@ -778,7 +815,10 @@ def _img_replace(match, point_name: str) -> str:
 
     if url.startswith(('assets/', 'code/', './assets/', './code/')):
         clean_url = url.lstrip('./')
-        new_url = f'_assets/{point_name}/{clean_url}'
+        new_url = (
+            f'https://raw.githubusercontent.com/wiki/'
+            f'{repo_slug}/_assets/{point_name}/{clean_url}'
+        )
         return f'{prefix}{new_url}'
 
     return full
