@@ -9,6 +9,9 @@
 [![知识点](https://img.shields.io/badge/知识点-897个-orange?style=flat-square)](#-课程体系)
 [![状态](https://img.shields.io/badge/状态-持续建设中-yellow?style=flat-square)](#-课程内容规范)
 
+[![GitHub仓库](https://img.shields.io/badge/GitHub-主仓库（推荐）-181717?style=flat-square&logo=github)](https://github.com/qq940500529/Artificial_Intelligence_Tutorial_zh)
+[![Gitee镜像](https://img.shields.io/badge/Gitee-镜像仓库（国内访问）-C71D23?style=flat-square&logo=gitee)](https://gitee.com/LIGKNO1/Artificial_Intelligence_Tutorial_zh)
+
 <br>
 
 *高中桥接 → 基础能力 → 核心原理 → 工程落地 → 持续研究*
@@ -30,6 +33,18 @@
 - [课程内容规范](#-课程内容规范)
 - [参与贡献](#-参与贡献)
 - [版权声明 / License](#-版权声明--license)
+
+---
+
+> [!NOTE]
+> **仓库访问说明**
+>
+> | 平台 | 地址 | 说明 |
+> | :--- | :--- | :--- |
+> | 🐙 GitHub（主仓库） | [github.com/qq940500529/Artificial_Intelligence_Tutorial_zh](https://github.com/qq940500529/Artificial_Intelligence_Tutorial_zh) | 推荐使用；Markdown 格式、数学公式与 Mermaid 图表渲染最佳 |
+> | 🦊 Gitee（镜像仓库） | [gitee.com/LIGKNO1/Artificial_Intelligence_Tutorial_zh](https://gitee.com/LIGKNO1/Artificial_Intelligence_Tutorial_zh) | 供中国大陆地区访问；**仅用于查看**，不接受 Issues 或 Pull Requests |
+>
+> 为获得最佳阅读体验，**请尽量通过 GitHub 查看课程内容**。若需提交问题反馈或参与贡献，请在 GitHub 仓库提交 Issues 或 Pull Requests。
 
 ---
 
@@ -314,6 +329,7 @@ flowchart LR
 > - 示例：`[02/深度学习] 新增：01_神经网络课程内容`
 > - 课程内容创建后，删除对应的 `.gitkeep` 占位文件
 > - 请勿修改 `知识图谱可视化/` 目录下的文件（该模块独立维护）
+> - **Issues 与 Pull Requests 请在 [GitHub 主仓库](https://github.com/qq940500529/Artificial_Intelligence_Tutorial_zh) 提交**，Gitee 镜像仓库仅供查看
 
 ---
 
