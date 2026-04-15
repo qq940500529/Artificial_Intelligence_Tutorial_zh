@@ -42,9 +42,9 @@
 > | 平台 | 地址 | 说明 |
 > | :--- | :--- | :--- |
 > | 🐙 GitHub（主仓库） | [github.com/qq940500529/Artificial_Intelligence_Tutorial_zh](https://github.com/qq940500529/Artificial_Intelligence_Tutorial_zh) | 推荐使用；Markdown 格式、数学公式与 Mermaid 图表渲染最佳 |
-> | 🦊 Gitee（镜像仓库） | [gitee.com/LIGKNO1/Artificial_Intelligence_Tutorial_zh](https://gitee.com/LIGKNO1/Artificial_Intelligence_Tutorial_zh) | 供中国大陆地区访问；**仅用于查看**，不接受 Issues 与 PR |
+> | 🦊 Gitee（镜像仓库） | [gitee.com/LIGKNO1/Artificial_Intelligence_Tutorial_zh](https://gitee.com/LIGKNO1/Artificial_Intelligence_Tutorial_zh) | 供中国大陆地区访问；**仅用于查看**，不接受 Issues 或 Pull Requests |
 >
-> 为获得最佳阅读体验，**请尽量通过 GitHub 查看课程内容**。若需提交问题反馈或参与贡献，请在 GitHub 仓库提交 Issue 或 Pull Request。
+> 为获得最佳阅读体验，**请尽量通过 GitHub 查看课程内容**。若需提交问题反馈或参与贡献，请在 GitHub 仓库提交 Issues 或 Pull Requests。
 
 ---
 
@@ -329,7 +329,7 @@ flowchart LR
 > - 示例：`[02/深度学习] 新增：01_神经网络课程内容`
 > - 课程内容创建后，删除对应的 `.gitkeep` 占位文件
 > - 请勿修改 `知识图谱可视化/` 目录下的文件（该模块独立维护）
-> - **Issues 与 Pull Request 请在 [GitHub 主仓库](https://github.com/qq940500529/Artificial_Intelligence_Tutorial_zh) 提交**，Gitee 镜像仓库仅供查看
+> - **Issues 与 Pull Requests 请在 [GitHub 主仓库](https://github.com/qq940500529/Artificial_Intelligence_Tutorial_zh) 提交**，Gitee 镜像仓库仅供查看
 
 ---
 
