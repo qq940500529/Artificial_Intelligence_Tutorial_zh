@@ -1,0 +1,105 @@
+# 同步课程内容到 Wiki | Sync Course Content to Wiki
+# 当主分支的课程目录有变更时，自动将已完成的课程内容同步到 GitHub Wiki
+# When course directories on the main branch are updated, automatically sync
+# completed course content to GitHub Wiki
+
+name: Sync to Wiki
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '00_高中复习/**'
+      - '01_基础能力/**'
+      - '02_核心原理/**'
+      - '03_工程落地/**'
+      - '04_持续研究/**'
+  workflow_dispatch: # 支持手动触发 | Allow manual trigger
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wiki-sync
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ----------------------------------------------------------------
+      # 1. 检出主仓库 | Checkout main repository
+      # ----------------------------------------------------------------
+      - name: Checkout main repository
+        uses: actions/checkout@v4
+
+      # ----------------------------------------------------------------
+      # 2. 安装 Python | Setup Python
+      # ----------------------------------------------------------------
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # ----------------------------------------------------------------
+      # 3. 克隆 Wiki 仓库（如果尚未初始化则新建）
+      #    Clone wiki repo (initialize if it doesn't exist yet)
+      # ----------------------------------------------------------------
+      - name: Clone wiki repository
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          WIKI_URL="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.wiki.git"
+          if git clone --quiet "$WIKI_URL" wiki-repo 2>/dev/null; then
+            echo "✅ Wiki repository cloned"
+          else
+            echo "⚠️ Wiki not initialized — creating fresh repository"
+            mkdir -p wiki-repo
+            cd wiki-repo
+            git init -b master --quiet
+          fi
+
+      # ----------------------------------------------------------------
+      # 4. 运行同步脚本 | Run sync script
+      # ----------------------------------------------------------------
+      - name: Sync content to wiki
+        env:
+          MAIN_REPO_PATH: ${{ github.workspace }}
+          WIKI_REPO_PATH: ${{ github.workspace }}/wiki-repo
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: python .github/scripts/sync_wiki.py
+
+      # ----------------------------------------------------------------
+      # 5. 提交并推送到 Wiki | Commit & push to wiki
+      # ----------------------------------------------------------------
+      - name: Push to wiki
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd wiki-repo
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+          if git diff --cached --quiet; then
+            echo "✅ No changes to push"
+            exit 0
+          fi
+
+          git commit -m "sync: auto-update from main repository ($(date -u '+%Y-%m-%d %H:%M UTC'))"
+
+          # 确保 remote 指向 wiki 仓库 | Ensure remote points to wiki repo
+          WIKI_URL="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.wiki.git"
+          if git remote get-url origin &>/dev/null; then
+            git remote set-url origin "$WIKI_URL"
+          else
+            git remote add origin "$WIKI_URL"
+          fi
+
+          # 检测 wiki 使用的分支名（master 或 main）
+          # Detect wiki branch name (master or main)
+          BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "master")
+          git push origin "HEAD:${BRANCH}" --force
+
+          echo "✅ Wiki updated successfully"
