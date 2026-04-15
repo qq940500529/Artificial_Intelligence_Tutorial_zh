@@ -14,6 +14,7 @@ on:
       - '02_核心原理/**'
       - '03_工程落地/**'
       - '04_持续研究/**'
+      - '.github/scripts/sync_wiki.py'
   workflow_dispatch: # 支持手动触发 | Allow manual trigger
 
 permissions:

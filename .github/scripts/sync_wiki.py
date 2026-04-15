@@ -3,12 +3,15 @@
 Sync course content from main repository to GitHub Wiki.
 
 功能 | Features:
-  1. 扫描已完成的课程 .md 文件，复制到 Wiki 仓库（保留目录结构）
-  2. 转换目录链接为具体文件链接，确保 Wiki 内跳转正常
-  3. 为每个页面添加导航面包屑
-  4. 复制 assets/code 等资源目录
-  5. 为无 README 的知识主题生成索引页
-  6. 生成 Home.md（首页）、_Sidebar.md（侧边栏）、_Footer.md（页脚）
+  1. 扫描已完成的课程 .md 文件，扁平化复制到 Wiki 仓库根目录
+     GitHub Wiki 使用扁平页面命名空间（按文件名索引，忽略目录结构），
+     因此所有 .md 文件必须放在 Wiki 仓库根目录下。
+  2. 将知识主题 README.md 重命名为 <主题名>.md 避免文件名冲突
+  3. 转换所有内部链接为扁平 Wiki 页面名（不含 .md 后缀和目录路径）
+  4. 为每个页面添加导航面包屑
+  5. 复制 assets/code 等资源目录（以知识点名称为前缀避免冲突）
+  6. 为无 README 的知识主题生成索引页
+  7. 生成 Home.md（首页）、_Sidebar.md（侧边栏）、_Footer.md（页脚）
 
 环境变量 | Environment Variables:
   MAIN_REPO_PATH    — 主仓库路径
@@ -41,6 +44,9 @@ STAGE_META = {
     '03_工程落地': ('阶段 03：工程落地', '将模型训练、部署、监控串成系统'),
     '04_持续研究': ('阶段 04：持续研究', '建立持续更新知识与专业判断的能力'),
 }
+
+# Emoji prefix used for module headings in Home.md and _Sidebar.md
+MODULE_EMOJI = '📚'
 
 # ---------------------------------------------------------------------------
 # 主入口 | Main
@@ -75,7 +81,13 @@ def main():
 
 
 class WikiSyncer:
-    """Scans course content and syncs it to a GitHub Wiki repository."""
+    """Scans course content and syncs it to a GitHub Wiki repository.
+
+    GitHub Wiki uses a flat page namespace: pages are indexed solely by
+    filename (without .md extension), and subdirectory structure is ignored
+    in the web UI.  Therefore this syncer copies all .md files to the wiki
+    root directory and transforms all internal links to flat wiki page names.
+    """
 
     def __init__(self, main_repo: Path, wiki_repo: Path, github_repo: str):
         self.main = main_repo
@@ -84,6 +96,17 @@ class WikiSyncer:
         # tree: stage_dir -> module_dir -> topic_dir -> {readme, points}
         self.tree: OrderedDict = OrderedDict()
         self.stats = {'pages': 0, 'points': 0, 'assets': 0}
+        # Maps repo-relative .md path -> wiki page name (flat, no .md)
+        # e.g. "00_高中复习/.../01_一元二次方程/01_一元二次方程.md"
+        #      -> "01_一元二次方程"
+        # e.g. "00_高中复习/.../01_代数与方程/README.md"
+        #      -> "01_代数与方程"
+        self._path_to_wiki: dict = {}
+        # Maps repo-relative directory path -> wiki destination
+        # for stage/module/topic/point directories.
+        # Stage/module dirs → "Home#<anchor>" (section in Home.md)
+        # Topic/point dirs → flat wiki page name
+        self._dir_to_wiki: dict = {}
 
     # ---------------------------------------------------------------
     # public
@@ -92,7 +115,8 @@ class WikiSyncer:
     def run(self):
         print('🔄 Starting wiki sync …')
         self._clean()
-        self._scan_and_copy()
+        self._scan()
+        self._copy_all()
         self._gen_topic_indexes()
         self._gen_home()
         self._gen_sidebar()
@@ -118,11 +142,11 @@ class WikiSyncer:
                 p.unlink()
 
     # ---------------------------------------------------------------
-    # 2. scan & copy course content
+    # 2. scan course content (build tree + path mapping, no copy yet)
     # ---------------------------------------------------------------
 
-    def _scan_and_copy(self):
-        """Walk the 4-level course tree; copy completed content to wiki."""
+    def _scan(self):
+        """Walk the 4-level course tree and build the content tree."""
         print('📂 Scanning course content …')
 
         for stage_dir in STAGES:
@@ -130,11 +154,25 @@ class WikiSyncer:
             if not stage_path.is_dir():
                 continue
 
+            # Register stage directory → Home anchor
+            meta = STAGE_META.get(stage_dir)
+            if meta:
+                stage_anchor = _anchor(meta[0])
+                self._dir_to_wiki[stage_dir] = f'Home#{stage_anchor}'
+
             stage_data: OrderedDict = OrderedDict()
 
             for module_path in sorted(stage_path.iterdir()):
                 if not module_path.is_dir():
                     continue
+
+                # Register module directory → Home anchor
+                mod_heading = f'{MODULE_EMOJI} {module_path.name}'
+                mod_anchor = _anchor(mod_heading)
+                mod_rel = str(
+                    module_path.relative_to(self.main)
+                )
+                self._dir_to_wiki[mod_rel] = f'Home#{mod_anchor}'
 
                 module_data: OrderedDict = OrderedDict()
 
@@ -143,15 +181,28 @@ class WikiSyncer:
                         continue
 
                     topic_data = {
-                        'readme': None,
+                        'readme': None,      # wiki page name (flat)
+                        'readme_src': None,   # repo-relative path
                         'points': OrderedDict(),
+                        'points_src': OrderedDict(),
+                        'extra_md': [],       # (src_path, wiki_name)
+                        'asset_dirs': [],     # (src_path, wiki_subdir)
                     }
+
+                    # Register topic directory → topic wiki page
+                    topic_rel = str(
+                        topic_path.relative_to(self.main)
+                    )
+                    self._dir_to_wiki[topic_rel] = topic_path.name
 
                     # --- topic README (level 3) ---
                     readme = topic_path / 'README.md'
                     if readme.is_file():
-                        rel = self._copy_md(readme)
-                        topic_data['readme'] = rel
+                        wiki_name = topic_path.name
+                        rel = str(readme.relative_to(self.main))
+                        self._path_to_wiki[rel] = wiki_name
+                        topic_data['readme'] = wiki_name
+                        topic_data['readme_src'] = rel
 
                     # --- knowledge points (level 4) ---
                     for point_path in sorted(topic_path.iterdir()):
@@ -162,19 +213,38 @@ class WikiSyncer:
                         if not course_file.is_file():
                             continue  # empty placeholder (.gitkeep only)
 
-                        rel = self._copy_md(course_file)
-                        topic_data['points'][point_path.name] = rel
+                        wiki_name = point_path.name
+                        rel = str(course_file.relative_to(self.main))
+                        self._path_to_wiki[rel] = wiki_name
+                        topic_data['points'][wiki_name] = wiki_name
+                        topic_data['points_src'][wiki_name] = rel
                         self.stats['points'] += 1
 
-                        # copy resource sub-directories
+                        # Register point directory → point wiki page
+                        pt_rel = str(
+                            point_path.relative_to(self.main)
+                        )
+                        self._dir_to_wiki[pt_rel] = wiki_name
+
+                        # record resource sub-directories
                         for sub in sorted(point_path.iterdir()):
                             if sub.is_dir() and not sub.name.startswith('.'):
-                                self._copy_dir(sub)
+                                topic_data['asset_dirs'].append(
+                                    (sub, wiki_name)
+                                )
 
-                        # copy extra .md files (sub-lectures)
+                        # record extra .md files (sub-lectures)
                         for extra in sorted(point_path.glob('*.md')):
-                            if extra.name != f'{point_path.name}.md':
-                                self._copy_md(extra)
+                            if extra.name == f'{point_path.name}.md':
+                                continue
+                            extra_wiki = extra.stem
+                            extra_rel = str(
+                                extra.relative_to(self.main)
+                            )
+                            self._path_to_wiki[extra_rel] = extra_wiki
+                            topic_data['extra_md'].append(
+                                (extra, extra_wiki)
+                            )
 
                     if topic_data['readme'] or topic_data['points']:
                         module_data[topic_path.name] = topic_data
@@ -185,59 +255,93 @@ class WikiSyncer:
             self.tree[stage_dir] = stage_data
 
     # ---------------------------------------------------------------
+    # 3. copy all content to wiki (flat structure)
+    # ---------------------------------------------------------------
+
+    def _copy_all(self):
+        """Copy all scanned content to wiki root with flat naming."""
+        print('📄 Copying content to wiki (flat) …')
+
+        for stage_dir, stage_data in self.tree.items():
+            for mod_name, mod_data in stage_data.items():
+                for topic_name, topic_data in mod_data.items():
+                    # Copy topic README as <topic_name>.md
+                    if topic_data['readme_src']:
+                        src = self.main / topic_data['readme_src']
+                        wiki_name = topic_data['readme']
+                        self._copy_md_flat(src, wiki_name, topic_data)
+
+                    # Copy knowledge point files
+                    for pt_name, pt_rel in (
+                            topic_data['points_src'].items()):
+                        src = self.main / pt_rel
+                        self._copy_md_flat(src, pt_name, topic_data)
+
+                    # Copy extra .md files
+                    for extra_src, extra_wiki in topic_data['extra_md']:
+                        self._copy_md_flat(
+                            extra_src, extra_wiki, topic_data
+                        )
+
+                    # Copy asset directories
+                    for asset_src, pt_name in topic_data['asset_dirs']:
+                        self._copy_assets(asset_src, pt_name)
+
+    # ---------------------------------------------------------------
     # helpers: copy files
     # ---------------------------------------------------------------
 
-    def _copy_md(self, src: Path) -> str:
-        """Copy an .md file to wiki with nav header + link transforms."""
-        rel = src.relative_to(self.main)
-        dest = self.wiki / rel
-        dest.parent.mkdir(parents=True, exist_ok=True)
+    def _copy_md_flat(self, src: Path, wiki_name: str,
+                      topic_data: dict) -> None:
+        """Copy a .md file to wiki root as <wiki_name>.md."""
+        dest = self.wiki / f'{wiki_name}.md'
 
         try:
             content = src.read_text(encoding='utf-8')
         except (UnicodeDecodeError, OSError) as exc:
+            rel = src.relative_to(self.main)
             print(f'  ⚠️ Skipping {rel}: {exc}')
-            return str(rel)
+            return
 
+        rel = src.relative_to(self.main)
         content = self._add_nav(content, rel)
         content = self._transform_links(content, rel)
         dest.write_text(content, encoding='utf-8')
         self.stats['pages'] += 1
-        return str(rel)
 
-    def _copy_dir(self, src: Path):
-        """Copy a resource directory (assets/, code/, …) to wiki."""
+    def _copy_assets(self, src: Path, point_name: str):
+        """Copy a resource directory (assets/, code/, …) to wiki.
+
+        Assets are stored under _assets/<point_name>/<dir_name>/
+        to avoid collisions between knowledge points.
+        """
         if not src.is_dir():
             return
-        rel = src.relative_to(self.main)
-        dest = self.wiki / rel
+        dir_name = src.name  # e.g. "assets", "code"
+        dest = self.wiki / '_assets' / point_name / dir_name
         if dest.exists():
             shutil.rmtree(dest)
         shutil.copytree(src, dest)
-        self.stats['assets'] += sum(1 for f in src.rglob('*') if f.is_file())
+        self.stats['assets'] += sum(
+            1 for f in src.rglob('*') if f.is_file()
+        )
 
     # ---------------------------------------------------------------
     # 3. navigation header (breadcrumb)
     # ---------------------------------------------------------------
 
-    def _add_nav(self, content: str, rel_path: Path) -> str:
-        """Prepend a breadcrumb navigation bar to page content."""
-        parts = rel_path.parts
-        depth = len(parts) - 1  # directories above the file
+    def _add_nav(self, content: str, src_rel_path: Path) -> str:
+        """Prepend a breadcrumb navigation bar to page content.
 
-        if depth > 0:
-            up = '/'.join(['..'] * depth)
-            home_link = f'[🏠 首页]({up}/Home)'
-        else:
-            home_link = '[🏠 首页](Home)'
-
+        All pages are now at wiki root, so Home link is just 'Home'.
+        """
+        parts = src_rel_path.parts
         crumbs = ' / '.join(parts[:-1])
+        home_link = '[🏠 首页](Home)'
         if crumbs:
             header = f'> {home_link} · {crumbs}\n\n---\n\n'
         else:
             header = f'> {home_link}\n\n---\n\n'
-
         return header + content
 
     # ---------------------------------------------------------------
@@ -245,7 +349,13 @@ class WikiSyncer:
     # ---------------------------------------------------------------
 
     def _transform_links(self, content: str, file_rel_path: Path) -> str:
-        """Transform directory-only links to point to concrete .md files."""
+        """Transform all internal links to flat wiki page names.
+
+        - Resolve relative paths against the source file location
+        - Map resolved repo paths to wiki page names
+        - Strip .md extensions (GitHub Wiki convention)
+        - Transform asset paths to use the _assets/ prefix
+        """
         file_dir = file_rel_path.parent
 
         def _replace(match):
@@ -257,26 +367,141 @@ class WikiSyncer:
             if re.match(r'^(https?://|#|mailto:|data:)', url):
                 return full
 
-            # directory links (ending with /)
-            if url.endswith('/'):
-                resolved = (self.main / file_dir / url).resolve()
-                # guard: ensure resolved path stays within the repo
+            # Handle .md links (both file.md and dir/file.md)
+            if url.endswith('.md') or '.md#' in url:
+                # Split off any anchor
+                if '#' in url:
+                    url_path, anchor = url.rsplit('#', 1)
+                    anchor = '#' + anchor
+                else:
+                    url_path = url
+                    anchor = ''
+
+                target_stem = Path(url_path).stem
+
+                resolved = (
+                    self.main / file_dir / url_path
+                ).resolve()
                 try:
-                    resolved.relative_to(self.main)
+                    repo_rel = str(resolved.relative_to(self.main))
                 except ValueError:
-                    return full
+                    # Path went above repo root; use filename fallback
+                    if target_stem != 'README':
+                        for wn in self._path_to_wiki.values():
+                            if wn == target_stem:
+                                return f'[{text}]({wn}{anchor})'
+                    return f'[{text}]({target_stem}{anchor})'
+
+                # Look up wiki page name by exact repo-relative path
+                wiki_name = self._path_to_wiki.get(repo_rel)
+                if wiki_name:
+                    return f'[{text}]({wiki_name}{anchor})'
+
+                # Fallback: match by filename stem (all knowledge
+                # point and topic names are unique across the repo)
+                if target_stem != 'README':
+                    for wn in self._path_to_wiki.values():
+                        if wn == target_stem:
+                            return f'[{text}]({wn}{anchor})'
+
+                # Try: directory link ending with /README.md
+                # -> topic page
+                if Path(repo_rel).name == 'README.md':
+                    # Topic README -> wiki name is the topic dir name
+                    topic_dir = Path(repo_rel).parent.name
+                    for wn in self._path_to_wiki.values():
+                        if wn == topic_dir:
+                            return f'[{text}]({topic_dir}{anchor})'
+
+                return full
+
+            # Handle directory links (ending with /)
+            if url.endswith('/'):
+                # Extract the last meaningful directory component
+                # from the URL (before the trailing /)
+                url_clean = url.rstrip('/')
+                dir_name = (url_clean.rsplit('/', 1)[-1]
+                            if '/' in url_clean else url_clean)
+
+                resolved = (self.main / file_dir / url).resolve()
+                try:
+                    dir_rel = str(resolved.relative_to(self.main))
+                except ValueError:
+                    # Path went above repo root; use fallback
+                    for wn in self._path_to_wiki.values():
+                        if wn == dir_name:
+                            return f'[{text}]({wn})'
+                    # Check _dir_to_wiki by directory name
+                    for dk, dv in self._dir_to_wiki.items():
+                        if Path(dk).name == dir_name:
+                            return f'[{text}]({dv})'
+                    return f'[{text}]({dir_name})'
+
+                # Check _dir_to_wiki for stage/module/topic/point
+                wiki_dest = self._dir_to_wiki.get(dir_rel)
+                if wiki_dest:
+                    return f'[{text}]({wiki_dest})'
+
                 if resolved.is_dir():
-                    name = resolved.name
-                    # prefer course main file, then README
-                    if (resolved / f'{name}.md').is_file():
-                        return f'[{text}]({url}{name}.md)'
-                    if (resolved / 'README.md').is_file():
-                        return f'[{text}]({url}README.md)'
-                # leave as-is if target doesn't exist
+                    # Check if this dir has a main course file
+                    course_md = resolved / f'{dir_name}.md'
+                    readme_md = resolved / 'README.md'
+
+                    if course_md.is_file():
+                        rel = str(course_md.relative_to(self.main))
+                        wiki_name = self._path_to_wiki.get(
+                            rel, dir_name
+                        )
+                        return f'[{text}]({wiki_name})'
+                    if readme_md.is_file():
+                        rel = str(readme_md.relative_to(self.main))
+                        wiki_name = self._path_to_wiki.get(
+                            rel, dir_name
+                        )
+                        return f'[{text}]({wiki_name})'
+
+                # Fallback: match directory name against wiki pages
+                # (handles broken relative paths in source files)
+                for wn in self._path_to_wiki.values():
+                    if wn == dir_name:
+                        return f'[{text}]({wn})'
+
+                # Check _dir_to_wiki by directory name (partial match)
+                for dk, dv in self._dir_to_wiki.items():
+                    if Path(dk).name == dir_name:
+                        return f'[{text}]({dv})'
+
+                # Final fallback: use the last path component as
+                # wiki page name.  When the target course is created
+                # and synced later, the link will automatically work.
+                return f'[{text}]({dir_name})'
 
             return full
 
-        return re.sub(r'\[([^\]]*)\]\(([^)]+)\)', _replace, content)
+        # Transform markdown links [text](url)
+        content = re.sub(
+            r'\[([^\]]*)\]\(([^)]+)\)', _replace, content
+        )
+
+        # Transform image/asset references to use _assets/ prefix
+        content = self._transform_asset_refs(content, file_rel_path)
+
+        return content
+
+    def _transform_asset_refs(self, content: str,
+                              file_rel_path: Path) -> str:
+        """Transform asset references (images etc.) to _assets/ paths."""
+        # The source file's knowledge point name (parent dir of the file)
+        point_name = file_rel_path.parent.name
+
+        # Match image syntax ![alt](url)
+        content = re.sub(
+            r'(!\[[^\]]*\]\()([^)]+)',
+            lambda m: _img_replace(m, point_name),
+            content,
+        )
+
+        return content
 
     # ---------------------------------------------------------------
     # 5. generate topic index pages (for topics without README)
@@ -295,15 +520,14 @@ class WikiSyncer:
                         continue  # no content to index
 
                     rel_dir = f'{stage_dir}/{mod_name}/{topic_name}'
-                    idx_rel = f'{rel_dir}/README.md'
-                    dest = self.wiki / idx_rel
-                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    wiki_name = topic_name
 
                     lines = [
                         f'# {topic_name}',
                         '',
                         f'> **所属路径**：`{rel_dir}`',
-                        f'> **包含知识点**：{len(topic_data["points"])} 个',
+                        f'> **包含知识点**：'
+                        f'{len(topic_data["points"])} 个',
                         '',
                         '---',
                         '',
@@ -311,20 +535,22 @@ class WikiSyncer:
                         '',
                     ]
 
-                    for pt_name, pt_path in topic_data['points'].items():
-                        # link relative to the README location
-                        pt_file = f'./{pt_name}/{pt_name}.md'
-                        lines.append(f'- [{pt_name}]({pt_file})')
+                    for pt_name in topic_data['points']:
+                        lines.append(f'- [{pt_name}]({pt_name})')
 
                     lines.append('')
 
                     # add nav header
                     nav_content = '\n'.join(lines)
-                    idx_path = Path(idx_rel)
-                    nav_content = self._add_nav(nav_content, idx_path)
+                    crumbs = rel_dir.replace('/', ' / ')
+                    header = (
+                        f'> [🏠 首页](Home) · {crumbs}\n\n---\n\n'
+                    )
+                    nav_content = header + nav_content
 
+                    dest = self.wiki / f'{wiki_name}.md'
                     dest.write_text(nav_content, encoding='utf-8')
-                    topic_data['readme'] = idx_rel
+                    topic_data['readme'] = wiki_name
                     self.stats['pages'] += 1
 
     # ---------------------------------------------------------------
@@ -386,15 +612,16 @@ class WikiSyncer:
                 continue
 
             for mod_name, mod_data in sdata.items():
-                lines.append(f'### 📚 {mod_name}')
+                lines.append(f'### {MODULE_EMOJI} {mod_name}')
                 lines.append('')
 
                 for topic_name, topic_data in mod_data.items():
                     if topic_data['readme']:
                         lines.append(
                             f'<details><summary>'
-                            f'<strong>📂 <a href="{topic_data["readme"]}">'
-                            f'{topic_name}</a></strong> '
+                            f'<strong>📂 <a href="'
+                            f'{topic_data["readme"]}'
+                            f'">{topic_name}</a></strong> '
                             f'({len(topic_data["points"])} 个知识点)'
                             f'</summary>'
                         )
@@ -407,8 +634,8 @@ class WikiSyncer:
                         )
                     lines.append('')
 
-                    for pt_name, pt_path in topic_data['points'].items():
-                        lines.append(f'- [{pt_name}]({pt_path})')
+                    for pt_name in topic_data['points']:
+                        lines.append(f'- [{pt_name}]({pt_name})')
 
                     lines.extend(['', '</details>', ''])
 
@@ -475,7 +702,7 @@ class WikiSyncer:
                 for mod_name, mod_data in sdata.items():
                     lines.append('<details>')
                     lines.append(
-                        f'<summary>&emsp;📚 {mod_name}</summary>'
+                        f'<summary>&emsp;{MODULE_EMOJI} {mod_name}</summary>'
                     )
                     lines.append('')
 
@@ -483,7 +710,8 @@ class WikiSyncer:
                         if topic_data['readme']:
                             lines.append(
                                 f'&emsp;&emsp;'
-                                f'[{topic_name}]({topic_data["readme"]})'
+                                f'[{topic_name}]'
+                                f'({topic_data["readme"]})'
                             )
                         else:
                             lines.append(
@@ -537,6 +765,23 @@ def _anchor(text: str) -> str:
     anchor = re.sub(r'[^\w\s\u4e00-\u9fff\-]', '', anchor)
     anchor = re.sub(r'\s+', '-', anchor.strip())
     return anchor
+
+
+def _img_replace(match, point_name: str) -> str:
+    """Replace image asset paths with _assets/ prefix."""
+    full = match.group(0)
+    prefix = match.group(1)  # '!['...']('
+    url = match.group(2)
+
+    if re.match(r'^(https?://|#|mailto:|data:)', url):
+        return full
+
+    if url.startswith(('assets/', 'code/', './assets/', './code/')):
+        clean_url = url.lstrip('./')
+        new_url = f'_assets/{point_name}/{clean_url}'
+        return f'{prefix}{new_url}'
+
+    return full
 
 
 # ---------------------------------------------------------------------------
