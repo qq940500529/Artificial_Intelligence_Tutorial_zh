@@ -333,7 +333,8 @@ class WikiSyncer:
     def _add_nav(self, content: str, src_rel_path: Path) -> str:
         """Prepend a breadcrumb navigation bar to page content.
 
-        All pages are now at wiki root, so Home link is just 'Home'.
+        Home link uses an absolute path (/{repo_slug}/wiki/Home) to
+        ensure correct resolution regardless of the current page URL.
         """
         parts = src_rel_path.parts
         crumbs = ' / '.join(parts[:-1])
@@ -367,12 +368,13 @@ class WikiSyncer:
     # ---------------------------------------------------------------
 
     def _transform_links(self, content: str, file_rel_path: Path) -> str:
-        """Transform all internal links to flat wiki page names.
+        """Transform all internal links to absolute wiki URLs.
 
         - Resolve relative paths against the source file location
         - Map resolved repo paths to wiki page names
         - Strip .md extensions (GitHub Wiki convention)
-        - Transform asset paths to use the _assets/ prefix
+        - Emit absolute /{repo_slug}/wiki/{page} links
+        - Rewrite image URLs to raw.githubusercontent.com/wiki/…
         """
         file_dir = file_rel_path.parent
 
@@ -385,12 +387,8 @@ class WikiSyncer:
             if re.match(r'^(https?://|#|mailto:|data:)', url):
                 return full
 
-            # Helper to build a wiki link (absolute or Home anchor)
+            # Helper to build an absolute wiki link
             def _mklink(txt, dest, anc=''):
-                if dest.startswith('Home#'):
-                    return (
-                        f'[{txt}](/{self.repo_slug}/wiki/{dest})'
-                    )
                 return self._wiki_link(txt, dest, anc)
 
             # Handle .md links (both file.md and dir/file.md)
@@ -516,7 +514,7 @@ class WikiSyncer:
 
     def _transform_asset_refs(self, content: str,
                               file_rel_path: Path) -> str:
-        """Transform asset references (images etc.) to _assets/ paths."""
+        """Transform image references to absolute raw.githubusercontent URLs."""
         # The source file's knowledge point name (parent dir of the file)
         point_name = file_rel_path.parent.name
 
