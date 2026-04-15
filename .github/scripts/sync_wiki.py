@@ -181,7 +181,12 @@ class WikiSyncer:
         dest = self.wiki / rel
         dest.parent.mkdir(parents=True, exist_ok=True)
 
-        content = src.read_text(encoding='utf-8')
+        try:
+            content = src.read_text(encoding='utf-8')
+        except (UnicodeDecodeError, OSError) as exc:
+            print(f'  ⚠️ Skipping {rel}: {exc}')
+            return str(rel)
+
         content = self._add_nav(content, rel)
         content = self._transform_links(content, rel)
         dest.write_text(content, encoding='utf-8')
@@ -242,6 +247,11 @@ class WikiSyncer:
             # directory links (ending with /)
             if url.endswith('/'):
                 resolved = (self.main / file_dir / url).resolve()
+                # guard: ensure resolved path stays within the repo
+                try:
+                    resolved.relative_to(self.main)
+                except ValueError:
+                    return full
                 if resolved.is_dir():
                     name = resolved.name
                     # prefer course main file, then README
@@ -511,7 +521,7 @@ def _anchor(text: str) -> str:
     """Convert heading text to GitHub-flavoured Markdown anchor id."""
     # GitHub strips punctuation except hyphens and lowercases everything
     anchor = text.lower()
-    anchor = re.sub(r'[^\w\s\u4e00-\u9fff-]', '', anchor)
+    anchor = re.sub(r'[^\w\s\u4e00-\u9fff\-]', '', anchor)
     anchor = re.sub(r'\s+', '-', anchor.strip())
     return anchor
 

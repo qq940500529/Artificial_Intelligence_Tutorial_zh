@@ -50,6 +50,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # GitHub Wiki 默认使用 master 分支；若已存在 Wiki 则保留其分支名
+          # GitHub Wiki defaults to 'master'; if wiki already exists, its branch is preserved
           WIKI_URL="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.wiki.git"
           if git clone --quiet "$WIKI_URL" wiki-repo 2>/dev/null; then
             echo "✅ Wiki repository cloned"
@@ -100,6 +102,8 @@ jobs:
           # 检测 wiki 使用的分支名（master 或 main）
           # Detect wiki branch name (master or main)
           BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "master")
+          # 使用 --force 推送：Wiki 内容完全由脚本生成，不应手动编辑
+          # Using --force: wiki content is entirely script-generated, not manually edited
           git push origin "HEAD:${BRANCH}" --force
 
           echo "✅ Wiki updated successfully"
