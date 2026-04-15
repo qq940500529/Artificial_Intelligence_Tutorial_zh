@@ -98,7 +98,7 @@ class WikiSyncer:
         #      -> "01_一元二次方程"
         # e.g. "00_高中复习/.../01_代数与方程/README.md"
         #      -> "01_代数与方程"
-        self._path_to_wiki: dict[str, str] = {}
+        self._path_to_wiki: dict = {}
 
     # ---------------------------------------------------------------
     # public
@@ -238,8 +238,8 @@ class WikiSyncer:
                         self._copy_md_flat(src, wiki_name, topic_data)
 
                     # Copy knowledge point files
-                    for pt_name, pt_rel in \
-                            topic_data['points_src'].items():
+                    for pt_name, pt_rel in (
+                            topic_data['points_src'].items()):
                         src = self.main / pt_rel
                         self._copy_md_flat(src, pt_name, topic_data)
 
@@ -345,7 +345,9 @@ class WikiSyncer:
 
                 target_stem = Path(url_path).stem
 
-                resolved = (self.main / file_dir / url_path).resolve()
+                resolved = (
+                    self.main / file_dir / url_path
+                ).resolve()
                 try:
                     repo_rel = str(resolved.relative_to(self.main))
                 except ValueError:
@@ -370,8 +372,7 @@ class WikiSyncer:
 
                 # Try: directory link ending with /README.md
                 # -> topic page
-                if repo_rel.endswith('/README.md') or \
-                        repo_rel.endswith('\\README.md'):
+                if Path(repo_rel).name == 'README.md':
                     # Topic README -> wiki name is the topic dir name
                     topic_dir = Path(repo_rel).parent.name
                     for wn in self._path_to_wiki.values():
@@ -385,8 +386,8 @@ class WikiSyncer:
                 # Extract the last meaningful directory component
                 # from the URL (before the trailing /)
                 url_clean = url.rstrip('/')
-                dir_name = url_clean.rsplit('/', 1)[-1] if '/' \
-                    in url_clean else url_clean
+                dir_name = (url_clean.rsplit('/', 1)[-1]
+                            if '/' in url_clean else url_clean)
 
                 resolved = (self.main / file_dir / url).resolve()
                 try:
